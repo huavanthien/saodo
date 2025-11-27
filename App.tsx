@@ -28,10 +28,15 @@ function App() {
   const [sliderImages, setSliderImages] = useState<SliderImage[]>(SLIDER_IMAGES);
 
   useEffect(() => {
-    const savedLogs = localStorage.getItem('saodo_logs');
-    if (savedLogs) {
-      setLogs(JSON.parse(savedLogs));
-    } else {
+    try {
+      const savedLogs = localStorage.getItem('saodo_logs');
+      if (savedLogs) {
+        setLogs(JSON.parse(savedLogs));
+      } else {
+        setLogs(INITIAL_LOGS_MOCK);
+      }
+    } catch (error) {
+      console.error("Failed to load logs from local storage", error);
       setLogs(INITIAL_LOGS_MOCK);
     }
   }, []);

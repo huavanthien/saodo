@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { DailyLog, ClassEntity, RankingItem } from '../types';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, CartesianGrid } from 'recharts';
-import { Trophy, Medal, AlertCircle, Calendar, X, User, CheckCircle2, Gift, ChevronLeft, ChevronRight, Crown } from 'lucide-react';
+import { Trophy, Medal, AlertCircle, Calendar, X, User, CheckCircle2, Gift, ChevronLeft, ChevronRight, Crown, BarChart3 } from 'lucide-react';
 
 interface RankingsProps {
   logs: DailyLog[];
@@ -221,7 +221,7 @@ export const Rankings: React.FC<RankingsProps> = ({ logs, classes }) => {
         {rankingData.length > 0 && (
           <div className="lg:col-span-3 bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
             <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-6 flex items-center gap-2">
-              <BarChart size={16} /> Biểu đồ so sánh
+              <BarChart3 size={16} /> Biểu đồ so sánh
             </h3>
             <div className="h-64 w-full">
               <ResponsiveContainer width="100%" height="100%">
