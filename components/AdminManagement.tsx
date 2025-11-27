@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
-import { ClassEntity, CriteriaConfig, User, UserRole, CriteriaType, Announcement } from '../types';
-import { Users, School, AlertTriangle, Plus, Trash2, Edit, Save, X, Bell, Pin } from 'lucide-react';
+import { ClassEntity, CriteriaConfig, User, UserRole, CriteriaType, Announcement, DailyLog } from '../types';
+import { Users, School, AlertTriangle, Plus, Trash2, Edit, Save, X, Bell, Pin, FileSpreadsheet, Download, CalendarRange, Filter } from 'lucide-react';
+// @ts-ignore
+import * as XLSX from 'xlsx';
 
 interface AdminManagementProps {
   users: User[];
   classes: ClassEntity[];
   criteria: CriteriaConfig[];
-  announcements?: Announcement[]; // Made optional to be backward compatible or strict
+  announcements?: Announcement[];
+  logs?: DailyLog[];
   onAddUser: (user: User) => void;
   onUpdateUser: (user: User) => void;
   onDeleteUser: (username: string) => void;
@@ -22,13 +25,13 @@ interface AdminManagementProps {
 }
 
 export const AdminManagement: React.FC<AdminManagementProps> = ({
-  users, classes, criteria, announcements = [],
+  users, classes, criteria, announcements = [], logs = [],
   onAddUser, onUpdateUser, onDeleteUser,
   onAddClass, onUpdateClass, onDeleteClass,
   onAddCriteria, onUpdateCriteria, onDeleteCriteria,
   onAddAnnouncement, onUpdateAnnouncement, onDeleteAnnouncement
 }) => {
-  const [activeTab, setActiveTab] = useState<'users' | 'classes' | 'criteria' | 'announcements'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'classes' | 'criteria' | 'announcements' | 'reports'>('users');
 
   // Modal States
   const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -46,6 +49,11 @@ export const AdminManagement: React.FC<AdminManagementProps> = ({
   const [editingAnnouncement, setEditingAnnouncement] = useState<Announcement | null>(null);
   const [isAnnouncementModalOpen, setIsAnnouncementModalOpen] = useState(false);
   const [isNewAnnouncement, setIsNewAnnouncement] = useState(false);
+
+  // Export States
+  const [exportType, setExportType] = useState<'week' | 'semester' | 'year'>('week');
+  const [exportWeek, setExportWeek] = useState<number>(12);
+  const [exportSemester, setExportSemester] = useState<number>(1);
 
   // --- Handlers for USER ---
   const openAddUser = () => {
@@ -202,11 +210,83 @@ export const AdminManagement: React.FC<AdminManagementProps> = ({
     }
   };
 
+  // --- EXPORT HANDLER ---
+  const handleExportExcel = () => {
+    try {
+        let filteredLogs = [...logs];
+        let fileName = 'BaoCao_NamHoc';
+
+        // Filtering Logic
+        if (exportType === 'week') {
+            filteredLogs = logs.filter(l => l.week === exportWeek);
+            fileName = `BaoCao_Tuan${exportWeek}`;
+        } else if (exportType === 'semester') {
+            if (exportSemester === 1) {
+                filteredLogs = logs.filter(l => l.week >= 1 && l.week <= 18);
+                fileName = `BaoCao_HocKy1`;
+            } else {
+                filteredLogs = logs.filter(l => l.week >= 19 && l.week <= 35);
+                fileName = `BaoCao_HocKy2`;
+            }
+        }
+
+        if (filteredLogs.length === 0) {
+            alert("Không tìm thấy dữ liệu chấm điểm cho khoảng thời gian đã chọn!");
+            return;
+        }
+
+        const rows = filteredLogs.map(log => {
+            const className = classes.find(c => c.id === log.classId)?.name || log.classId;
+            const violations = log.deductions.map(d => {
+                const critName = criteria.find(c => c.id === d.criteriaId)?.name || d.criteriaId;
+                return `${critName} (-${d.pointsLost})`;
+            }).join('; ');
+            
+            const totalDeducted = log.deductions.reduce((acc, curr) => acc + curr.pointsLost, 0);
+
+            return {
+                'Mã phiếu': log.id,
+                'Ngày': log.date,
+                'Tuần học': log.week,
+                'Lớp': className,
+                'Người chấm': log.reporterName,
+                'Tổng điểm': log.totalScore,
+                'Điểm trừ': totalDeducted,
+                'Điểm cộng': log.bonusPoints,
+                'Chi tiết vi phạm': violations || 'Không có',
+                'Nhận xét': log.comment
+            };
+        });
+
+        // @ts-ignore
+        const worksheet = XLSX.utils.json_to_sheet(rows);
+        // @ts-ignore
+        const workbook = XLSX.utils.book_new();
+        
+        // Auto-width columns
+        const wscols = [
+            {wch: 15}, {wch: 12}, {wch: 8}, {wch: 8}, {wch: 20}, {wch: 10}, {wch: 10}, {wch: 10}, {wch: 50}, {wch: 40}
+        ];
+        worksheet['!cols'] = wscols;
+
+        // @ts-ignore
+        XLSX.utils.book_append_sheet(workbook, worksheet, "DuLieu");
+        
+        const dateStr = new Date().toISOString().split('T')[0];
+        // @ts-ignore
+        XLSX.writeFile(workbook, `${fileName}_${dateStr}.xlsx`);
+    } catch (error) {
+        console.error("Export error", error);
+        alert("Có lỗi khi xuất file. Vui lòng thử lại.");
+    }
+  };
+
   const tabs = [
     { id: 'users', label: 'Người dùng', icon: Users },
     { id: 'classes', label: 'Lớp học', icon: School },
     { id: 'criteria', label: 'Tiêu chí', icon: AlertTriangle },
     { id: 'announcements', label: 'Tin tức', icon: Bell },
+    { id: 'reports', label: 'Xuất dữ liệu', icon: FileSpreadsheet },
   ];
 
   return (
@@ -398,6 +478,94 @@ export const AdminManagement: React.FC<AdminManagementProps> = ({
               )}
             </div>
            </div>
+        )}
+
+        {/* ================= REPORTS TAB (NEW) ================= */}
+        {activeTab === 'reports' && (
+            <div className="flex flex-col items-center justify-center py-12 text-center max-w-2xl mx-auto">
+                <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center text-green-600 mb-6 shadow-xl shadow-green-100">
+                    <FileSpreadsheet size={40} />
+                </div>
+                <h3 className="text-2xl font-black text-slate-800 mb-2">Xuất dữ liệu hệ thống</h3>
+                <p className="text-slate-500 mb-8">
+                    Tải xuống nhật ký chấm điểm dưới định dạng Excel (.xlsx). Chọn khoảng thời gian bạn muốn xuất báo cáo.
+                </p>
+
+                <div className="w-full bg-slate-50 p-6 rounded-2xl border border-slate-200 mb-8">
+                    <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center justify-center gap-2">
+                        <Filter size={16} /> Bộ lọc xuất dữ liệu
+                    </h4>
+                    
+                    <div className="flex flex-col md:flex-row gap-4 items-center justify-center">
+                        <div className="flex items-center bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
+                            <button 
+                                onClick={() => setExportType('week')} 
+                                className={`px-4 py-2 rounded-lg text-sm font-bold transition ${exportType === 'week' ? 'bg-green-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50'}`}
+                            >
+                                Theo Tuần
+                            </button>
+                            <button 
+                                onClick={() => setExportType('semester')} 
+                                className={`px-4 py-2 rounded-lg text-sm font-bold transition ${exportType === 'semester' ? 'bg-green-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50'}`}
+                            >
+                                Học Kỳ
+                            </button>
+                            <button 
+                                onClick={() => setExportType('year')} 
+                                className={`px-4 py-2 rounded-lg text-sm font-bold transition ${exportType === 'year' ? 'bg-green-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-50'}`}
+                            >
+                                Cả Năm
+                            </button>
+                        </div>
+
+                        {exportType === 'week' && (
+                            <div className="relative">
+                                <select 
+                                    value={exportWeek} 
+                                    onChange={(e) => setExportWeek(parseInt(e.target.value))}
+                                    className="appearance-none bg-white border border-slate-200 text-slate-700 font-bold py-2.5 pl-4 pr-10 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 cursor-pointer shadow-sm"
+                                >
+                                    {Array.from({length: 35}, (_, i) => i + 1).map(w => (
+                                        <option key={w} value={w}>Tuần {w}</option>
+                                    ))}
+                                </select>
+                                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500">
+                                    <CalendarRange size={16} />
+                                </div>
+                            </div>
+                        )}
+
+                        {exportType === 'semester' && (
+                            <div className="flex bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
+                                <button 
+                                    onClick={() => setExportSemester(1)}
+                                    className={`px-3 py-1.5 text-sm font-bold rounded-lg transition ${exportSemester === 1 ? 'bg-green-100 text-green-700' : 'text-slate-500 hover:bg-slate-50'}`}
+                                >
+                                    Học Kỳ 1
+                                </button>
+                                <button 
+                                    onClick={() => setExportSemester(2)}
+                                    className={`px-3 py-1.5 text-sm font-bold rounded-lg transition ${exportSemester === 2 ? 'bg-green-100 text-green-700' : 'text-slate-500 hover:bg-slate-50'}`}
+                                >
+                                    Học Kỳ 2
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+                
+                <button 
+                    onClick={handleExportExcel}
+                    className="bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-10 rounded-2xl shadow-xl shadow-green-600/30 flex items-center gap-3 transition transform hover:scale-105 active:scale-95"
+                >
+                    <Download size={24} />
+                    Tải về file Excel
+                </button>
+                
+                <p className="mt-4 text-xs text-slate-400 italic">
+                    File sẽ được lưu với tên tương ứng (VD: BaoCao_Tuan12.xlsx)
+                </p>
+            </div>
         )}
       </div>
 
