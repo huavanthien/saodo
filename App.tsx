@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { InputForm } from './components/InputForm';
 import { Rankings } from './components/Rankings';
@@ -5,8 +6,8 @@ import { AIReport } from './components/AIReport';
 import { HomePage } from './components/HomePage';
 import { AdminManagement } from './components/AdminManagement';
 import { LoginModal } from './components/LoginModal';
-import { CLASSES, INITIAL_LOGS_MOCK, MOCK_ANNOUNCEMENTS, MOCK_USERS, CRITERIA_LIST } from './constants';
-import { DailyLog, User, UserRole, ClassEntity, CriteriaConfig, Announcement } from './types';
+import { CLASSES, INITIAL_LOGS_MOCK, MOCK_ANNOUNCEMENTS, MOCK_USERS, CRITERIA_LIST, SLIDER_IMAGES } from './constants';
+import { DailyLog, User, UserRole, ClassEntity, CriteriaConfig, Announcement, SliderImage } from './types';
 import { LayoutDashboard, PenTool, BarChart3, Bot, Menu, X, LogOut, Settings, Award, AlertTriangle, UserCheck, Home, ArrowRight } from 'lucide-react';
 
 type Tab = 'dashboard' | 'input' | 'rankings' | 'ai' | 'management';
@@ -24,6 +25,7 @@ function App() {
   const [classes, setClasses] = useState<ClassEntity[]>(CLASSES);
   const [criteriaList, setCriteriaList] = useState<CriteriaConfig[]>(CRITERIA_LIST);
   const [announcements, setAnnouncements] = useState<Announcement[]>(MOCK_ANNOUNCEMENTS);
+  const [sliderImages, setSliderImages] = useState<SliderImage[]>(SLIDER_IMAGES);
 
   useEffect(() => {
     const savedLogs = localStorage.getItem('saodo_logs');
@@ -74,6 +76,9 @@ function App() {
   const handleUpdateAnnouncement = (ann: Announcement) => setAnnouncements(announcements.map(a => a.id === ann.id ? ann : a));
   const handleDeleteAnnouncement = (id: string) => setAnnouncements(announcements.filter(a => a.id !== id));
 
+  const handleAddImage = (img: SliderImage) => setSliderImages([...sliderImages, img]);
+  const handleUpdateImage = (img: SliderImage) => setSliderImages(sliderImages.map(i => i.id === img.id ? img : i));
+  const handleDeleteImage = (id: string) => setSliderImages(sliderImages.filter(i => i.id !== id));
 
   const getNavItems = () => {
     const items = [
@@ -98,6 +103,8 @@ function App() {
           logs={logs} 
           classes={classes} 
           announcements={announcements}
+          criteriaList={criteriaList}
+          sliderImages={sliderImages}
           currentUser={currentUser}
           onLoginClick={() => setShowLoginModal(true)}
           onDashboardClick={() => setIsInAdminMode(true)}
@@ -300,7 +307,7 @@ function App() {
           )}
 
           {activeTab === 'ai' && currentUser.role === UserRole.ADMIN && (
-            <AIReport logs={logs} classes={classes} />
+            <AIReport logs={logs} classes={classes} criteriaList={criteriaList} />
           )}
 
           {activeTab === 'management' && currentUser.role === UserRole.ADMIN && (
@@ -309,6 +316,7 @@ function App() {
               classes={classes}
               criteria={criteriaList}
               announcements={announcements}
+              images={sliderImages}
               logs={logs}
               onAddUser={handleAddUser}
               onUpdateUser={handleUpdateUser}
@@ -322,6 +330,9 @@ function App() {
               onAddAnnouncement={handleAddAnnouncement}
               onUpdateAnnouncement={handleUpdateAnnouncement}
               onDeleteAnnouncement={handleDeleteAnnouncement}
+              onAddImage={handleAddImage}
+              onUpdateImage={handleUpdateImage}
+              onDeleteImage={handleDeleteImage}
             />
           )}
         </div>

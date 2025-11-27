@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
-import { DailyLog, ClassEntity } from '../types';
+import { DailyLog, ClassEntity, CriteriaConfig } from '../types';
 import { generateWeeklyReport } from '../services/geminiService';
 import { Sparkles, Copy, Check } from 'lucide-react';
 
 interface AIReportProps {
   logs: DailyLog[];
   classes: ClassEntity[];
+  criteriaList: CriteriaConfig[];
 }
 
-export const AIReport: React.FC<AIReportProps> = ({ logs, classes }) => {
+export const AIReport: React.FC<AIReportProps> = ({ logs, classes, criteriaList }) => {
   const [report, setReport] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -20,7 +21,7 @@ export const AIReport: React.FC<AIReportProps> = ({ logs, classes }) => {
     }
     setLoading(true);
     setReport('');
-    const result = await generateWeeklyReport(logs, classes);
+    const result = await generateWeeklyReport(logs, classes, criteriaList);
     setReport(result);
     setLoading(false);
   };

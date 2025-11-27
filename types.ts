@@ -1,3 +1,4 @@
+
 export enum CriteriaType {
   DONG_PHUC = 'Đồng phục',
   VE_SINH = 'Vệ sinh',
@@ -52,6 +53,13 @@ export interface Announcement {
   date: string;
   content: string;
   isImportant?: boolean;
+}
+
+export interface SliderImage {
+  id: string;
+  url: string;
+  title: string;
+  subtitle: string;
 }
 
 export enum UserRole {

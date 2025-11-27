@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
-import { ClassEntity, CriteriaConfig, User, UserRole, CriteriaType, Announcement, DailyLog } from '../types';
-import { Users, School, AlertTriangle, Plus, Trash2, Edit, Save, X, Bell, Pin, FileSpreadsheet, Download, CalendarRange, Filter } from 'lucide-react';
+import { ClassEntity, CriteriaConfig, User, UserRole, CriteriaType, Announcement, DailyLog, SliderImage } from '../types';
+import { Users, School, AlertTriangle, Plus, Trash2, Edit, Save, X, Bell, Pin, FileSpreadsheet, Download, CalendarRange, Filter, BookOpen, Image as ImageIcon } from 'lucide-react';
 // @ts-ignore
 import * as XLSX from 'xlsx';
 
@@ -10,6 +11,7 @@ interface AdminManagementProps {
   criteria: CriteriaConfig[];
   announcements?: Announcement[];
   logs?: DailyLog[];
+  images?: SliderImage[];
   onAddUser: (user: User) => void;
   onUpdateUser: (user: User) => void;
   onDeleteUser: (username: string) => void;
@@ -22,16 +24,20 @@ interface AdminManagementProps {
   onAddAnnouncement?: (ann: Announcement) => void;
   onUpdateAnnouncement?: (ann: Announcement) => void;
   onDeleteAnnouncement?: (id: string) => void;
+  onAddImage?: (img: SliderImage) => void;
+  onUpdateImage?: (img: SliderImage) => void;
+  onDeleteImage?: (id: string) => void;
 }
 
 export const AdminManagement: React.FC<AdminManagementProps> = ({
-  users, classes, criteria, announcements = [], logs = [],
+  users, classes, criteria, announcements = [], logs = [], images = [],
   onAddUser, onUpdateUser, onDeleteUser,
   onAddClass, onUpdateClass, onDeleteClass,
   onAddCriteria, onUpdateCriteria, onDeleteCriteria,
-  onAddAnnouncement, onUpdateAnnouncement, onDeleteAnnouncement
+  onAddAnnouncement, onUpdateAnnouncement, onDeleteAnnouncement,
+  onAddImage, onUpdateImage, onDeleteImage
 }) => {
-  const [activeTab, setActiveTab] = useState<'users' | 'classes' | 'criteria' | 'announcements' | 'reports'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'classes' | 'criteria' | 'announcements' | 'images' | 'reports'>('users');
 
   // Modal States
   const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -49,6 +55,10 @@ export const AdminManagement: React.FC<AdminManagementProps> = ({
   const [editingAnnouncement, setEditingAnnouncement] = useState<Announcement | null>(null);
   const [isAnnouncementModalOpen, setIsAnnouncementModalOpen] = useState(false);
   const [isNewAnnouncement, setIsNewAnnouncement] = useState(false);
+
+  const [editingImage, setEditingImage] = useState<SliderImage | null>(null);
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [isNewImage, setIsNewImage] = useState(false);
 
   // Export States
   const [exportType, setExportType] = useState<'week' | 'semester' | 'year'>('week');
@@ -210,6 +220,40 @@ export const AdminManagement: React.FC<AdminManagementProps> = ({
     }
   };
 
+  // --- Handlers for IMAGES ---
+  const openAddImage = () => {
+    setEditingImage({ id: '', url: '', title: '', subtitle: '' });
+    setIsNewImage(true);
+    setIsImageModalOpen(true);
+  };
+
+  const openEditImage = (img: SliderImage) => {
+    setEditingImage({ ...img });
+    setIsNewImage(false);
+    setIsImageModalOpen(true);
+  };
+
+  const handleSaveImage = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingImage || !onAddImage || !onUpdateImage) return;
+
+    if (isNewImage) {
+        editingImage.id = `img${Date.now()}`;
+        onAddImage(editingImage);
+    } else {
+        onUpdateImage(editingImage);
+    }
+    setIsImageModalOpen(false);
+  };
+
+  const handleDeleteImageClick = (id: string) => {
+    if (!onDeleteImage) return;
+    if (confirm('Bạn có chắc muốn xóa hình ảnh này?')) {
+        onDeleteImage(id);
+    }
+  };
+
+
   // --- EXPORT HANDLER ---
   const handleExportExcel = () => {
     try {
@@ -284,8 +328,9 @@ export const AdminManagement: React.FC<AdminManagementProps> = ({
   const tabs = [
     { id: 'users', label: 'Người dùng', icon: Users },
     { id: 'classes', label: 'Lớp học', icon: School },
-    { id: 'criteria', label: 'Tiêu chí', icon: AlertTriangle },
+    { id: 'criteria', label: 'Quy định', icon: BookOpen },
     { id: 'announcements', label: 'Tin tức', icon: Bell },
+    { id: 'images', label: 'Hình ảnh', icon: ImageIcon },
     { id: 'reports', label: 'Xuất dữ liệu', icon: FileSpreadsheet },
   ];
 
@@ -480,7 +525,43 @@ export const AdminManagement: React.FC<AdminManagementProps> = ({
            </div>
         )}
 
-        {/* ================= REPORTS TAB (NEW) ================= */}
+        {/* ================= IMAGES TAB (NEW) ================= */}
+        {activeTab === 'images' && (
+            <div>
+             <div className="flex justify-between items-center mb-6">
+               <h3 className="text-lg font-bold text-slate-800">Quản lý hình ảnh (Slide trang chủ)</h3>
+               <button 
+                 onClick={openAddImage}
+                 className="bg-primary-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 hover:bg-primary-700 transition"
+               >
+                 <Plus size={16} /> Thêm hình ảnh
+               </button>
+             </div>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+               {images.map(img => (
+                 <div key={img.id} className="flex gap-4 p-3 border border-slate-200 rounded-xl hover:bg-slate-50 transition">
+                    <img src={img.url} alt={img.title} className="w-24 h-24 object-cover rounded-lg bg-slate-200" />
+                    <div className="flex-1 overflow-hidden">
+                       <h4 className="font-bold text-slate-800 truncate">{img.title}</h4>
+                       <p className="text-xs text-slate-500 truncate mb-1">{img.subtitle}</p>
+                       <p className="text-xs text-blue-500 truncate bg-blue-50 p-1 rounded font-mono">{img.url}</p>
+                    </div>
+                    <div className="flex flex-col justify-center gap-2 shrink-0 border-l pl-3 ml-2 border-slate-100">
+                        <button onClick={() => openEditImage(img)} className="text-blue-400 hover:text-blue-600"><Edit size={16} /></button>
+                        <button onClick={() => handleDeleteImageClick(img.id)} className="text-slate-400 hover:text-red-500"><Trash2 size={16} /></button>
+                    </div>
+                 </div>
+               ))}
+               {images.length === 0 && (
+                 <div className="col-span-2 text-center py-10 text-slate-400 italic">
+                   Chưa có hình ảnh nào.
+                 </div>
+               )}
+             </div>
+            </div>
+        )}
+
+        {/* ================= REPORTS TAB ================= */}
         {activeTab === 'reports' && (
             <div className="flex flex-col items-center justify-center py-12 text-center max-w-2xl mx-auto">
                 <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center text-green-600 mb-6 shadow-xl shadow-green-100">
@@ -829,6 +910,79 @@ export const AdminManagement: React.FC<AdminManagementProps> = ({
                     className="flex-1 py-2 px-4 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700 transition flex items-center justify-center gap-2"
                   >
                     <Save size={18} /> Lưu thông báo
+                  </button>
+                </div>
+              </form>
+           </div>
+        </div>
+      )}
+
+      {/* ================= IMAGE MODAL ================= */}
+      {isImageModalOpen && editingImage && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm">
+           <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl p-6 animate-fade-in-up">
+              <div className="flex justify-between items-center mb-4 border-b border-slate-100 pb-2">
+                <h3 className="text-xl font-bold text-slate-800">{isNewImage ? 'Thêm hình ảnh' : 'Sửa hình ảnh'}</h3>
+                <button onClick={() => setIsImageModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+                  <X size={24} />
+                </button>
+              </div>
+              
+              <form onSubmit={handleSaveImage} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-1">Đường dẫn hình ảnh (URL)</label>
+                  <input 
+                    type="text" 
+                    value={editingImage.url}
+                    onChange={(e) => setEditingImage({...editingImage, url: e.target.value})}
+                    className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 font-mono text-sm"
+                    placeholder="https://example.com/image.jpg"
+                    required
+                  />
+                  {editingImage.url && (
+                    <div className="mt-2 w-full h-32 bg-slate-100 rounded-lg overflow-hidden border border-slate-200">
+                        <img src={editingImage.url} alt="Preview" className="w-full h-full object-cover" onError={(e) => (e.currentTarget.style.display = 'none')} />
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-1">Tiêu đề chính</label>
+                  <input 
+                    type="text" 
+                    value={editingImage.title}
+                    onChange={(e) => setEditingImage({...editingImage, title: e.target.value})}
+                    className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                    placeholder="Ví dụ: Lễ khai giảng"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-1">Mô tả ngắn</label>
+                  <input 
+                    type="text" 
+                    value={editingImage.subtitle}
+                    onChange={(e) => setEditingImage({...editingImage, subtitle: e.target.value})}
+                    className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                    placeholder="Ví dụ: Chào đón năm học mới 2025"
+                    required
+                  />
+                </div>
+
+                <div className="pt-4 flex gap-3">
+                  <button 
+                    type="button"
+                    onClick={() => setIsImageModalOpen(false)}
+                    className="flex-1 py-2 px-4 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition"
+                  >
+                    Hủy bỏ
+                  </button>
+                  <button 
+                    type="submit"
+                    className="flex-1 py-2 px-4 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700 transition flex items-center justify-center gap-2"
+                  >
+                    <Save size={18} /> Lưu hình ảnh
                   </button>
                 </div>
               </form>

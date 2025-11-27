@@ -1,14 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-
-interface ImageSlide {
-  url: string;
-  title: string;
-  subtitle: string;
-}
+import { SliderImage } from '../types';
 
 interface ImageSliderProps {
-  images: ImageSlide[];
+  images: SliderImage[];
 }
 
 export const ImageSlider: React.FC<ImageSliderProps> = ({ images }) => {
@@ -16,18 +12,24 @@ export const ImageSlider: React.FC<ImageSliderProps> = ({ images }) => {
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
+      if (images.length > 0) {
+        setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
+      }
     }, 5000); // Auto slide every 5 seconds
 
     return () => clearInterval(timer);
   }, [images.length]);
 
   const goToNext = () => {
-    setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
+    if (images.length > 0) {
+        setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
+    }
   };
 
   const goToPrevious = () => {
-    setCurrentIndex((prevIndex) => (prevIndex - 1 + images.length) % images.length);
+    if (images.length > 0) {
+        setCurrentIndex((prevIndex) => (prevIndex - 1 + images.length) % images.length);
+    }
   };
 
   const goToSlide = (index: number) => {
@@ -41,7 +43,7 @@ export const ImageSlider: React.FC<ImageSliderProps> = ({ images }) => {
       {/* Images */}
       {images.map((img, index) => (
         <div
-          key={index}
+          key={img.id}
           className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
             index === currentIndex ? 'opacity-100' : 'opacity-0'
           }`}

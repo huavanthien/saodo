@@ -1,6 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
-import { DailyLog, ClassEntity } from "../types";
-import { CRITERIA_LIST } from "../constants";
+import { DailyLog, ClassEntity, CriteriaConfig } from "../types";
 
 const getClient = () => {
   const apiKey = process.env.API_KEY;
@@ -13,7 +12,8 @@ const getClient = () => {
 
 export const generateWeeklyReport = async (
   logs: DailyLog[],
-  classes: ClassEntity[]
+  classes: ClassEntity[],
+  criteriaList: CriteriaConfig[]
 ): Promise<string> => {
   const client = getClient();
   if (!client) return "Chưa cấu hình API Key. Vui lòng kiểm tra môi trường.";
@@ -22,8 +22,8 @@ export const generateWeeklyReport = async (
   const summaryData = logs.map(log => {
     const className = classes.find(c => c.id === log.classId)?.name || log.classId;
     const violations = log.deductions.map(d => {
-      const criteria = CRITERIA_LIST.find(c => c.id === d.criteriaId);
-      return `${criteria?.name} (-${d.pointsLost}đ): ${d.note}`;
+      const criteria = criteriaList.find(c => c.id === d.criteriaId);
+      return `${criteria?.name || 'Lỗi không xác định'} (-${d.pointsLost}đ): ${d.note}`;
     }).join("; ");
     
     return `Ngày ${log.date}, Lớp ${className}: Điểm ${log.totalScore}. Lỗi: ${violations || "Không có"}. Nhận xét: ${log.comment}`;

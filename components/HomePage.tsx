@@ -1,15 +1,17 @@
+
 import React, { useState } from 'react';
-import { DailyLog, ClassEntity, Announcement, User, UserRole } from '../types';
+import { DailyLog, ClassEntity, Announcement, User, UserRole, CriteriaConfig, SliderImage } from '../types';
 import { Rankings } from './Rankings';
 import { Announcements } from './Announcements';
 import { ImageSlider } from './ImageSlider';
-import { SLIDER_IMAGES } from '../constants';
-import { LogIn, Award, Star, BookOpen, LayoutDashboard, User as UserIcon, ArrowRight, Calendar, X, Pin, Bell } from 'lucide-react';
+import { LogIn, Award, Star, BookOpen, LayoutDashboard, User as UserIcon, ArrowRight, Calendar, X, Pin, Bell, AlertTriangle } from 'lucide-react';
 
 interface HomePageProps {
   logs: DailyLog[];
   classes: ClassEntity[];
   announcements: Announcement[];
+  criteriaList: CriteriaConfig[];
+  sliderImages: SliderImage[];
   currentUser: User | null;
   onLoginClick: () => void;
   onDashboardClick: () => void;
@@ -19,6 +21,8 @@ export const HomePage: React.FC<HomePageProps> = ({
   logs, 
   classes, 
   announcements, 
+  criteriaList,
+  sliderImages,
   currentUser,
   onLoginClick,
   onDashboardClick 
@@ -162,7 +166,7 @@ export const HomePage: React.FC<HomePageProps> = ({
             <div className="lg:col-span-1">
               <div className="sticky top-24 space-y-6">
                 {/* Image Slider */}
-                <ImageSlider images={SLIDER_IMAGES} />
+                <ImageSlider images={sliderImages} />
 
                 {/* Announcements */}
                 <Announcements 
@@ -170,7 +174,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                   onViewAll={() => setShowAllAnnouncements(true)}
                 />
                 
-                {/* Rules */}
+                {/* Rules - Dynamic Content */}
                 <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-6 rounded-3xl shadow-xl text-white relative overflow-hidden group hover:shadow-2xl transition-shadow">
                   <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full blur-2xl group-hover:bg-white/20 transition-colors"></div>
                   <h4 className="font-bold text-xl mb-4 flex items-center gap-2 relative z-10">
@@ -178,15 +182,26 @@ export const HomePage: React.FC<HomePageProps> = ({
                   </h4>
                   <ul className="space-y-3 relative z-10">
                     <li className="flex items-start gap-3 bg-white/10 p-3 rounded-lg border border-white/10">
-                       <span className="font-bold text-yellow-300 text-lg">100</span>
+                       <span className="font-bold text-yellow-300 text-lg min-w-[30px] text-center">100</span>
                        <span className="text-sm font-medium">Điểm tối đa mỗi ngày. Hãy giữ nề nếp thật tốt!</span>
                     </li>
-                    <li className="flex items-start gap-3 bg-white/10 p-3 rounded-lg border border-white/10">
-                       <span className="font-bold text-red-300 text-lg">-5</span>
-                       <span className="text-sm font-medium">Điểm trừ cho mỗi lần mất trật tự hoặc xả rác bừa bãi.</span>
-                    </li>
-                    <li className="flex items-start gap-3 bg-white/10 p-3 rounded-lg border border-white/10">
-                       <span className="font-bold text-green-300 text-lg">+</span>
+                    
+                    {/* Render specific criteria dynamically */}
+                    {criteriaList.slice(0, 3).map((crit) => (
+                      <li key={crit.id} className="flex items-start gap-3 bg-white/10 p-3 rounded-lg border border-white/10">
+                         <span className="font-bold text-red-300 text-lg min-w-[30px] text-center">-{crit.maxPoints}</span>
+                         <span className="text-sm font-medium">{crit.name}</span>
+                      </li>
+                    ))}
+
+                    {criteriaList.length > 3 && (
+                      <li className="text-center text-xs text-blue-100 font-medium pt-1">
+                        ...và {criteriaList.length - 3} quy định khác
+                      </li>
+                    )}
+
+                    <li className="flex items-start gap-3 bg-white/10 p-3 rounded-lg border border-white/10 mt-2">
+                       <span className="font-bold text-green-300 text-lg min-w-[30px] text-center">+</span>
                        <span className="text-sm font-medium">Điểm cộng khi làm việc tốt và tham gia phong trào.</span>
                     </li>
                   </ul>
