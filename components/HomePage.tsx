@@ -47,7 +47,7 @@ export const HomePage: React.FC<HomePageProps> = ({
               NH
             </div>
             <div>
-              <h1 className="text-2xl font-extrabold text-slate-800 leading-none">TH Nguyễn Huệ</h1>
+              <h1 className="text-2xl font-extrabold text-slate-800 leading-none">Tiểu học Nguyễn Huệ</h1>
               <p className="text-xs text-primary-600 font-bold uppercase tracking-wider mt-1">Cổng thi đua điện tử</p>
             </div>
           </div>
@@ -223,7 +223,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                <span>✉️ lienhe@c1nguyenhue.edu.vn</span>
             </div>
             <div className="pt-8 border-t border-slate-800 mt-8 text-xs font-medium text-slate-600">
-              © {new Date().getFullYear()} Sao Do Nguyen Hue App. Xây dựng vì học sinh thân yêu.
+              © {new Date().getFullYear()} Sao đỏ Nguyễn Huệ. Xây dựng vì học sinh thân yêu.
             </div>
          </div>
       </footer>

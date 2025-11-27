@@ -15,7 +15,7 @@ export const Announcements: React.FC<AnnouncementsProps> = ({ announcements, onV
     <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden w-full">
       <div className="p-4 border-b border-slate-100 flex items-center gap-2 bg-slate-50">
         <Bell className="text-primary-600" size={20} />
-        <h2 className="text-lg font-bold text-slate-800">Thông báo từ nhà trường</h2>
+        <h2 className="text-lg font-bold text-slate-800">Thông báo từ Liên đội</h2>
       </div>
       <div className="divide-y divide-slate-100">
         {displayList.map((item) => (
