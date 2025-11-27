@@ -656,15 +656,18 @@ export const AdminManagement: React.FC<AdminManagementProps> = ({
 
       {/* ================= USER MODAL ================= */}
       {isUserModalOpen && editingUser && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm">
-           <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl p-6 animate-fade-in-up overflow-y-auto max-h-[90vh]">
-              <div className="flex justify-between items-center mb-4 border-b border-slate-100 pb-2">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm">
+           <form onSubmit={handleSaveUser} className="bg-white w-full max-w-md rounded-2xl shadow-2xl animate-fade-in-up flex flex-col max-h-[90vh]">
+              {/* Header */}
+              <div className="flex justify-between items-center p-6 border-b border-slate-100 shrink-0">
                 <h3 className="text-xl font-bold text-slate-800">{isNewUser ? 'Thêm người dùng' : 'Sửa người dùng'}</h3>
-                <button onClick={() => setIsUserModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+                <button type="button" onClick={() => setIsUserModalOpen(false)} className="text-slate-400 hover:text-slate-600">
                   <X size={24} />
                 </button>
               </div>
-              <form onSubmit={handleSaveUser} className="space-y-4">
+              
+              {/* Content */}
+              <div className="p-6 overflow-y-auto space-y-4">
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-1">Tên đăng nhập</label>
                   <input 
@@ -672,7 +675,7 @@ export const AdminManagement: React.FC<AdminManagementProps> = ({
                     value={editingUser.username}
                     onChange={(e) => setEditingUser({...editingUser, username: e.target.value})}
                     className="w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                    disabled={!isNewUser} // Cannot change username when editing
+                    disabled={!isNewUser}
                     required
                   />
                 </div>
@@ -725,26 +728,31 @@ export const AdminManagement: React.FC<AdminManagementProps> = ({
                     </div>
                   </div>
                 )}
-                <div className="pt-4 flex gap-3">
-                  <button type="button" onClick={() => setIsUserModalOpen(false)} className="flex-1 py-2 px-4 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition">Hủy</button>
-                  <button type="submit" className="flex-1 py-2 px-4 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700 transition flex items-center justify-center gap-2"><Save size={18} /> Lưu</button>
-                </div>
-              </form>
-           </div>
+              </div>
+
+              {/* Footer */}
+              <div className="p-6 border-t border-slate-100 bg-slate-50 rounded-b-2xl flex gap-3 shrink-0">
+                  <button type="button" onClick={() => setIsUserModalOpen(false)} className="flex-1 py-2 px-4 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-100 transition shadow-sm">Hủy</button>
+                  <button type="submit" className="flex-1 py-2 px-4 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700 transition flex items-center justify-center gap-2 shadow-sm shadow-primary-500/30"><Save size={18} /> Lưu</button>
+              </div>
+           </form>
         </div>
       )}
 
       {/* ================= CLASS MODAL ================= */}
       {isClassModalOpen && editingClass && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm">
-           <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl p-6 animate-fade-in-up">
-              <div className="flex justify-between items-center mb-4 border-b border-slate-100 pb-2">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm">
+           <form onSubmit={handleSaveClass} className="bg-white w-full max-w-md rounded-2xl shadow-2xl animate-fade-in-up flex flex-col max-h-[90vh]">
+              {/* Header */}
+              <div className="flex justify-between items-center p-6 border-b border-slate-100 shrink-0">
                 <h3 className="text-xl font-bold text-slate-800">{isNewClass ? 'Thêm lớp học' : 'Sửa lớp học'}</h3>
-                <button onClick={() => setIsClassModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+                <button type="button" onClick={() => setIsClassModalOpen(false)} className="text-slate-400 hover:text-slate-600">
                   <X size={24} />
                 </button>
               </div>
-              <form onSubmit={handleSaveClass} className="space-y-4">
+
+              {/* Content */}
+              <div className="p-6 overflow-y-auto space-y-4">
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-1">Tên lớp (Ví dụ: 5C)</label>
                   <input 
@@ -765,27 +773,31 @@ export const AdminManagement: React.FC<AdminManagementProps> = ({
                     {[1, 2, 3, 4, 5].map(g => <option key={g} value={g}>Khối {g}</option>)}
                   </select>
                 </div>
-                <div className="pt-4 flex gap-3">
-                  <button type="button" onClick={() => setIsClassModalOpen(false)} className="flex-1 py-2 px-4 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition">Hủy</button>
-                  <button type="submit" className="flex-1 py-2 px-4 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700 transition flex items-center justify-center gap-2"><Save size={18} /> Lưu</button>
-                </div>
-              </form>
-           </div>
+              </div>
+
+              {/* Footer */}
+              <div className="p-6 border-t border-slate-100 bg-slate-50 rounded-b-2xl flex gap-3 shrink-0">
+                  <button type="button" onClick={() => setIsClassModalOpen(false)} className="flex-1 py-2 px-4 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-100 transition shadow-sm">Hủy</button>
+                  <button type="submit" className="flex-1 py-2 px-4 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700 transition flex items-center justify-center gap-2 shadow-sm shadow-primary-500/30"><Save size={18} /> Lưu</button>
+              </div>
+           </form>
         </div>
       )}
 
       {/* ================= CRITERIA MODAL ================= */}
       {isCriteriaModalOpen && editingCriteria && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm">
-           <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl p-6 animate-fade-in-up">
-              <div className="flex justify-between items-center mb-4 border-b border-slate-100 pb-2">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm">
+           <form onSubmit={handleSaveCriteria} className="bg-white w-full max-w-md rounded-2xl shadow-2xl animate-fade-in-up flex flex-col max-h-[90vh]">
+              {/* Header */}
+              <div className="flex justify-between items-center p-6 border-b border-slate-100 shrink-0">
                 <h3 className="text-xl font-bold text-slate-800">{isNewCriteria ? 'Thêm tiêu chí' : 'Sửa tiêu chí'}</h3>
-                <button onClick={() => setIsCriteriaModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+                <button type="button" onClick={() => setIsCriteriaModalOpen(false)} className="text-slate-400 hover:text-slate-600">
                   <X size={24} />
                 </button>
               </div>
               
-              <form onSubmit={handleSaveCriteria} className="space-y-4">
+              {/* Content */}
+              <div className="p-6 overflow-y-auto space-y-4">
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-1">Tên lỗi vi phạm</label>
                   <input 
@@ -821,39 +833,31 @@ export const AdminManagement: React.FC<AdminManagementProps> = ({
                     ))}
                   </select>
                 </div>
+              </div>
 
-                <div className="pt-4 flex gap-3">
-                  <button 
-                    type="button"
-                    onClick={() => setIsCriteriaModalOpen(false)}
-                    className="flex-1 py-2 px-4 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition"
-                  >
-                    Hủy bỏ
-                  </button>
-                  <button 
-                    type="submit"
-                    className="flex-1 py-2 px-4 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700 transition flex items-center justify-center gap-2"
-                  >
-                    <Save size={18} /> Lưu thay đổi
-                  </button>
-                </div>
-              </form>
-           </div>
+              {/* Footer */}
+              <div className="p-6 border-t border-slate-100 bg-slate-50 rounded-b-2xl flex gap-3 shrink-0">
+                  <button type="button" onClick={() => setIsCriteriaModalOpen(false)} className="flex-1 py-2 px-4 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-100 transition shadow-sm">Hủy</button>
+                  <button type="submit" className="flex-1 py-2 px-4 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700 transition flex items-center justify-center gap-2 shadow-sm shadow-primary-500/30"><Save size={18} /> Lưu</button>
+              </div>
+           </form>
         </div>
       )}
 
       {/* ================= ANNOUNCEMENT MODAL ================= */}
       {isAnnouncementModalOpen && editingAnnouncement && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm">
-           <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl p-6 animate-fade-in-up">
-              <div className="flex justify-between items-center mb-4 border-b border-slate-100 pb-2">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm">
+           <form onSubmit={handleSaveAnnouncement} className="bg-white w-full max-w-lg rounded-2xl shadow-2xl animate-fade-in-up flex flex-col max-h-[90vh]">
+              {/* Header */}
+              <div className="flex justify-between items-center p-6 border-b border-slate-100 shrink-0">
                 <h3 className="text-xl font-bold text-slate-800">{isNewAnnouncement ? 'Đăng thông báo mới' : 'Sửa thông báo'}</h3>
-                <button onClick={() => setIsAnnouncementModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+                <button type="button" onClick={() => setIsAnnouncementModalOpen(false)} className="text-slate-400 hover:text-slate-600">
                   <X size={24} />
                 </button>
               </div>
               
-              <form onSubmit={handleSaveAnnouncement} className="space-y-4">
+              {/* Content */}
+              <div className="p-6 overflow-y-auto space-y-4">
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-1">Tiêu đề thông báo</label>
                   <input 
@@ -900,39 +904,31 @@ export const AdminManagement: React.FC<AdminManagementProps> = ({
                     required
                   ></textarea>
                 </div>
+              </div>
 
-                <div className="pt-4 flex gap-3">
-                  <button 
-                    type="button"
-                    onClick={() => setIsAnnouncementModalOpen(false)}
-                    className="flex-1 py-2 px-4 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition"
-                  >
-                    Hủy bỏ
-                  </button>
-                  <button 
-                    type="submit"
-                    className="flex-1 py-2 px-4 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700 transition flex items-center justify-center gap-2"
-                  >
-                    <Save size={18} /> Lưu thông báo
-                  </button>
-                </div>
-              </form>
-           </div>
+              {/* Footer */}
+              <div className="p-6 border-t border-slate-100 bg-slate-50 rounded-b-2xl flex gap-3 shrink-0">
+                  <button type="button" onClick={() => setIsAnnouncementModalOpen(false)} className="flex-1 py-2 px-4 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-100 transition shadow-sm">Hủy</button>
+                  <button type="submit" className="flex-1 py-2 px-4 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700 transition flex items-center justify-center gap-2 shadow-sm shadow-primary-500/30"><Save size={18} /> Lưu</button>
+              </div>
+           </form>
         </div>
       )}
 
       {/* ================= IMAGE MODAL ================= */}
       {isImageModalOpen && editingImage && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm">
-           <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl p-6 animate-fade-in-up">
-              <div className="flex justify-between items-center mb-4 border-b border-slate-100 pb-2">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/20 backdrop-blur-sm">
+           <form onSubmit={handleSaveImage} className="bg-white w-full max-w-lg rounded-2xl shadow-2xl animate-fade-in-up flex flex-col max-h-[90vh]">
+              {/* Header */}
+              <div className="flex justify-between items-center p-6 border-b border-slate-100 shrink-0">
                 <h3 className="text-xl font-bold text-slate-800">{isNewImage ? 'Thêm hình ảnh' : 'Sửa hình ảnh'}</h3>
-                <button onClick={() => setIsImageModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+                <button type="button" onClick={() => setIsImageModalOpen(false)} className="text-slate-400 hover:text-slate-600">
                   <X size={24} />
                 </button>
               </div>
               
-              <form onSubmit={handleSaveImage} className="space-y-4">
+              {/* Content */}
+              <div className="p-6 overflow-y-auto space-y-4">
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-1">Đường dẫn hình ảnh (URL)</label>
                   <input 
@@ -973,24 +969,14 @@ export const AdminManagement: React.FC<AdminManagementProps> = ({
                     required
                   />
                 </div>
+              </div>
 
-                <div className="pt-4 flex gap-3">
-                  <button 
-                    type="button"
-                    onClick={() => setIsImageModalOpen(false)}
-                    className="flex-1 py-2 px-4 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition"
-                  >
-                    Hủy bỏ
-                  </button>
-                  <button 
-                    type="submit"
-                    className="flex-1 py-2 px-4 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700 transition flex items-center justify-center gap-2"
-                  >
-                    <Save size={18} /> Lưu hình ảnh
-                  </button>
-                </div>
-              </form>
-           </div>
+              {/* Footer */}
+              <div className="p-6 border-t border-slate-100 bg-slate-50 rounded-b-2xl flex gap-3 shrink-0">
+                  <button type="button" onClick={() => setIsImageModalOpen(false)} className="flex-1 py-2 px-4 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-100 transition shadow-sm">Hủy</button>
+                  <button type="submit" className="flex-1 py-2 px-4 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700 transition flex items-center justify-center gap-2 shadow-sm shadow-primary-500/30"><Save size={18} /> Lưu</button>
+              </div>
+           </form>
         </div>
       )}
     </div>
