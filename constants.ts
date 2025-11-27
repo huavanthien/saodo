@@ -182,3 +182,26 @@ export const MOCK_USERS: User[] = [
     assignedClassIds: ['3A3', '3A4', '2A1', '2A2']
   }
 ];
+
+export const SLIDER_IMAGES = [
+  {
+    url: 'https://images.unsplash.com/photo-1546410531-bb4caa6b424d?q=80&w=800&auto=format&fit=crop',
+    title: 'Lễ Khai Giảng Năm Học Mới',
+    subtitle: 'Hân hoan chào đón năm học 2025 - 2026'
+  },
+  {
+    url: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=800&auto=format&fit=crop',
+    title: 'Hoạt Động Ngoại Khóa',
+    subtitle: 'Học sinh tham gia vẽ tranh bảo vệ môi trường'
+  },
+  {
+    url: 'https://images.unsplash.com/photo-1427504746696-ea3093607dbe?q=80&w=800&auto=format&fit=crop',
+    title: 'Thi Đua Dạy Tốt - Học Tốt',
+    subtitle: 'Phong trào thi đua chào mừng 20/11'
+  },
+  {
+    url: 'https://images.unsplash.com/photo-1588072432836-e10032774350?q=80&w=800&auto=format&fit=crop',
+    title: 'Thư Viện Xanh',
+    subtitle: 'Không gian đọc sách thân thiện cho học sinh'
+  }
+];

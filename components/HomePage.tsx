@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { DailyLog, ClassEntity, Announcement, User, UserRole } from '../types';
 import { Rankings } from './Rankings';
 import { Announcements } from './Announcements';
-import { LogIn, Award, Star, BookOpen, LayoutDashboard, User as UserIcon, ArrowRight, Calendar } from 'lucide-react';
+import { ImageSlider } from './ImageSlider';
+import { SLIDER_IMAGES } from '../constants';
+import { LogIn, Award, Star, BookOpen, LayoutDashboard, User as UserIcon, ArrowRight, Calendar, X, Pin, Bell } from 'lucide-react';
 
 interface HomePageProps {
   logs: DailyLog[];
@@ -21,6 +23,8 @@ export const HomePage: React.FC<HomePageProps> = ({
   onLoginClick,
   onDashboardClick 
 }) => {
+  const [showAllAnnouncements, setShowAllAnnouncements] = useState(false);
+
   // Calculate School Year
   const today = new Date();
   const currentMonth = today.getMonth() + 1;
@@ -154,14 +158,20 @@ export const HomePage: React.FC<HomePageProps> = ({
                </div>
             </div>
             
-            {/* Right Column: Announcements & Rules (Takes 1/3) */}
+            {/* Right Column: Slider, Announcements & Rules (Takes 1/3) */}
             <div className="lg:col-span-1">
-              <div className="sticky top-24 space-y-8">
-                <div className="bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
-                   <Announcements announcements={announcements} />
-                </div>
+              <div className="sticky top-24 space-y-6">
+                {/* Image Slider */}
+                <ImageSlider images={SLIDER_IMAGES} />
+
+                {/* Announcements */}
+                <Announcements 
+                  announcements={announcements} 
+                  onViewAll={() => setShowAllAnnouncements(true)}
+                />
                 
-                <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-6 rounded-3xl shadow-lg text-white relative overflow-hidden group hover:shadow-xl transition-shadow">
+                {/* Rules */}
+                <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-6 rounded-3xl shadow-xl text-white relative overflow-hidden group hover:shadow-2xl transition-shadow">
                   <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full blur-2xl group-hover:bg-white/20 transition-colors"></div>
                   <h4 className="font-bold text-xl mb-4 flex items-center gap-2 relative z-10">
                      <BookOpen size={20} /> Quy định chấm điểm
@@ -202,6 +212,54 @@ export const HomePage: React.FC<HomePageProps> = ({
             </div>
          </div>
       </footer>
+
+      {/* All Announcements Modal */}
+      {showAllAnnouncements && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm" onClick={() => setShowAllAnnouncements(false)}>
+           <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden animate-fade-in-up flex flex-col max-h-[85vh]" onClick={e => e.stopPropagation()}>
+              <div className="bg-slate-50 p-6 flex justify-between items-center border-b border-slate-100 sticky top-0 z-10">
+                 <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center text-primary-600">
+                       <Bell size={20} />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-slate-800">Tất cả thông báo</h3>
+                      <p className="text-xs text-slate-500 font-bold">{announcements.length} bản tin</p>
+                    </div>
+                 </div>
+                 <button 
+                  onClick={() => setShowAllAnnouncements(false)}
+                  className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-200 text-slate-500 hover:bg-slate-300 hover:text-slate-800 transition"
+                 >
+                    <X size={20} />
+                 </button>
+              </div>
+              
+              <div className="overflow-y-auto p-6 space-y-6">
+                 {announcements.length === 0 ? (
+                    <div className="text-center py-10 text-slate-400">Không có dữ liệu.</div>
+                 ) : (
+                    announcements.map(item => (
+                       <div key={item.id} className={`p-6 rounded-2xl border ${item.isImportant ? 'border-red-200 bg-red-50/20' : 'border-slate-100 bg-white hover:border-slate-300'} transition-all`}>
+                          <div className="flex flex-col md:flex-row justify-between md:items-start gap-2 mb-3">
+                             <h4 className={`text-lg font-bold ${item.isImportant ? 'text-primary-700' : 'text-slate-800'} flex items-start gap-2`}>
+                                {item.isImportant && <Pin className="text-primary-500 shrink-0 mt-1" size={16} fill="currentColor" />}
+                                {item.title}
+                             </h4>
+                             <span className="text-xs font-bold text-slate-400 bg-slate-100 px-3 py-1 rounded-full whitespace-nowrap self-start">
+                                {item.date}
+                             </span>
+                          </div>
+                          <div className="text-slate-600 leading-relaxed text-sm whitespace-pre-line">
+                             {item.content}
+                          </div>
+                       </div>
+                    ))
+                 )}
+              </div>
+           </div>
+        </div>
+      )}
     </div>
   );
 };
