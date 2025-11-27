@@ -4,6 +4,7 @@ import { ClassEntity, CriteriaConfig, User, UserRole, CriteriaType, Announcement
 import { Users, School, AlertTriangle, Plus, Trash2, Edit, Save, X, Bell, Pin, FileSpreadsheet, Download, CalendarRange, Filter, BookOpen, Image as ImageIcon } from 'lucide-react';
 // @ts-ignore
 import * as XLSX from 'xlsx';
+import { ToastType } from './Toast';
 
 interface AdminManagementProps {
   users: User[];
@@ -27,6 +28,7 @@ interface AdminManagementProps {
   onAddImage?: (img: SliderImage) => void;
   onUpdateImage?: (img: SliderImage) => void;
   onDeleteImage?: (id: string) => void;
+  showToast?: (message: string, type: ToastType) => void;
 }
 
 export const AdminManagement: React.FC<AdminManagementProps> = ({
@@ -35,7 +37,8 @@ export const AdminManagement: React.FC<AdminManagementProps> = ({
   onAddClass, onUpdateClass, onDeleteClass,
   onAddCriteria, onUpdateCriteria, onDeleteCriteria,
   onAddAnnouncement, onUpdateAnnouncement, onDeleteAnnouncement,
-  onAddImage, onUpdateImage, onDeleteImage
+  onAddImage, onUpdateImage, onDeleteImage,
+  showToast = () => {}
 }) => {
   const [activeTab, setActiveTab] = useState<'users' | 'classes' | 'criteria' | 'announcements' | 'images' | 'reports'>('users');
 
@@ -83,9 +86,8 @@ export const AdminManagement: React.FC<AdminManagementProps> = ({
     if (!editingUser) return;
     
     if (isNewUser) {
-      // Check duplicate
       if (users.some(u => u.username === editingUser.username)) {
-        alert('Tên đăng nhập đã tồn tại!');
+        showToast('Tên đăng nhập đã tồn tại!', 'error');
         return;
       }
       onAddUser(editingUser);
@@ -133,7 +135,7 @@ export const AdminManagement: React.FC<AdminManagementProps> = ({
     if (isNewClass) {
       if (!editingClass.id) editingClass.id = editingClass.name; // Simple ID gen
       if (classes.some(c => c.id === editingClass.id)) {
-        alert('Mã lớp/Tên lớp đã tồn tại!');
+        showToast('Mã lớp/Tên lớp đã tồn tại!', 'error');
         return;
       }
       onAddClass(editingClass);
@@ -275,7 +277,7 @@ export const AdminManagement: React.FC<AdminManagementProps> = ({
         }
 
         if (filteredLogs.length === 0) {
-            alert("Không tìm thấy dữ liệu chấm điểm cho khoảng thời gian đã chọn!");
+            showToast("Không tìm thấy dữ liệu chấm điểm cho khoảng thời gian đã chọn!", 'error');
             return;
         }
 
@@ -319,9 +321,11 @@ export const AdminManagement: React.FC<AdminManagementProps> = ({
         const dateStr = new Date().toISOString().split('T')[0];
         // @ts-ignore
         XLSX.writeFile(workbook, `${fileName}_${dateStr}.xlsx`);
+        
+        showToast("Xuất file Excel thành công!", 'success');
     } catch (error) {
         console.error("Export error", error);
-        alert("Có lỗi khi xuất file. Vui lòng thử lại.");
+        showToast("Có lỗi khi xuất file. Vui lòng thử lại.", 'error');
     }
   };
 

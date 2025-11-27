@@ -48,7 +48,7 @@ export const HomePage: React.FC<HomePageProps> = ({
             </div>
             <div>
               <h1 className="text-2xl font-extrabold text-slate-800 leading-none">Tiểu học Nguyễn Huệ</h1>
-              <p className="text-xs text-primary-600 font-bold uppercase tracking-wider mt-1">Quản lý thi đua Liên đội</p>
+              <p className="text-xs text-primary-600 font-bold uppercase tracking-wider mt-1">Cổng thi đua điện tử</p>
             </div>
           </div>
           

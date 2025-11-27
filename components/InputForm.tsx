@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { MAX_DAILY_SCORE } from '../constants';
 import { DailyLog, ClassEntity, CriteriaConfig, User, UserRole } from '../types';
@@ -95,11 +96,11 @@ export const InputForm: React.FC<InputFormProps> = ({ onSave, classes, criteriaL
     };
 
     onSave(newLog);
+    // Reset form
     setDeductions([]);
     setBonusPoints(0);
     setComment('');
     setIsBonusOnly(false);
-    alert("Đã lưu kết quả!");
   };
 
   const weeks = Array.from({ length: 35 }, (_, i) => i + 1);
