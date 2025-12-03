@@ -187,7 +187,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                             <label className="block text-sm font-semibold text-slate-700 mb-1">Email / Tài khoản</label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400"><Mail size={20} /></div>
-                                <input type="text" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary-500" placeholder="admin@nguyenhue.edu.vn" required />
+                                <input type="text" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary-500" placeholder="tên tài khoản" required />
                             </div>
                         </div>
                         <div>
