@@ -1,4 +1,5 @@
 
+
 import { ClassEntity, CriteriaConfig, CriteriaType, Announcement, User, UserRole, DailyLog, SliderImage } from './types';
 
 // Danh sách lớp mới cập nhật
@@ -156,28 +157,28 @@ export const MOCK_ANNOUNCEMENTS: Announcement[] = [
 export const MOCK_USERS: User[] = [
   {
     username: 'admin',
-    password: '123',
+    password: '123456',
     name: 'Tổng Phụ Trách',
     role: UserRole.ADMIN,
     assignedClassIds: []
   },
   {
     username: 'saodo1',
-    password: '123',
+    password: '123456',
     name: 'Nguyễn Văn A',
     role: UserRole.RED_STAR,
     assignedClassIds: ['5A1', '5A2', '5A3', '4A1'] 
   },
   {
     username: 'saodo2',
-    password: '123',
+    password: '123456',
     name: 'Trần Thị B',
     role: UserRole.RED_STAR,
     assignedClassIds: ['4A2', '4A3', '3A1', '3A2']
   },
   {
     username: 'saodo3',
-    password: '123',
+    password: '123456',
     name: 'Lê Văn C',
     role: UserRole.RED_STAR,
     assignedClassIds: ['3A3', '3A4', '2A1', '2A2']
