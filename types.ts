@@ -12,7 +12,7 @@ export interface CriteriaConfig {
   id: string;
   name: string;
   maxPoints: number; // Max points deductible or total points
-  type: CriteriaType;
+  type: string; // Changed from CriteriaType to string to allow dynamic categories
 }
 
 export interface ClassEntity {
