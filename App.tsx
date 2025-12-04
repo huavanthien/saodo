@@ -237,14 +237,17 @@ function App() {
                      </li>
                      <li className="pl-2">
                         Trong trang tổng quan dự án:
-                        <ul className="list-disc pl-5 mt-2 space-y-2 text-xs">
-                           <li>Vào <strong>Build</strong> -> <strong>Authentication</strong> -> <strong>Get Started</strong> -> Bật <strong>Email/Password</strong>.</li>
-                           <li>Vào <strong>Build</strong> -> <strong>Firestore Database</strong> -> <strong>Create Database</strong> -> Chọn <strong>Start in test mode</strong>.</li>
-                        </ul>
-                     </li>
-                     <li className="pl-2">
-                        Vào <strong>Project settings</strong> (icon bánh răng) -> Kéo xuống phần <strong>Your apps</strong> -> Chọn icon <strong>Web (&lt;/&gt;)</strong> để đăng ký app.
-                     </li>
+                   <ul className="list-disc pl-5 mt-2 space-y-2 text-xs">
+  <li>
+    Vào <strong>Build</strong> &rarr; <strong>Authentication</strong> &rarr; <strong>Get Started</strong> &rarr; Bật <strong>Email/Password</strong>.
+  </li>
+  <li>
+    Vào <strong>Build</strong> &rarr; <strong>Firestore Database</strong> &rarr; <strong>Create Database</strong> &rarr; Chọn <strong>Start in test mode</strong>.
+  </li>
+  <li className="pl-2">
+    Vào <strong>Project settings</strong> (icon bánh răng) &rarr; Kéo xuống phần <strong>Your apps</strong> &rarr; Chọn icon <strong>Web (&lt;/&gt;)</strong> để đăng ký app.
+  </li>
+</ul>
                      <li className="pl-2">
                         Copy đoạn mã <code>firebaseConfig</code> và dán đè vào file <code>firebaseConfig.ts</code> trong code editor của bạn.
                      </li>
