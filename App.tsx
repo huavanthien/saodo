@@ -247,7 +247,6 @@ function App() {
   <li className="pl-2">
     Vào <strong>Project settings</strong> (icon bánh răng) &rarr; Kéo xuống phần <strong>Your apps</strong> &rarr; Chọn icon <strong>Web (&lt;/&gt;)</strong> để đăng ký app.
   </li>
-</ul>
                      <li className="pl-2">
                         Copy đoạn mã <code>firebaseConfig</code> và dán đè vào file <code>firebaseConfig.ts</code> trong code editor của bạn.
                      </li>
