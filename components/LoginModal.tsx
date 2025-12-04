@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { User, UserRole } from '../types';
-import { X, LogIn, KeyRound, Mail, ArrowLeft, Send, UserPlus, User as UserIcon, Shield, Crown } from 'lucide-react';
+import { X, LogIn, KeyRound, Mail, ArrowLeft, Send, UserPlus, User as UserIcon, Shield, Crown, AlertTriangle } from 'lucide-react';
 import { loginUser, resetPassword, registerUser, saveUserFirestore } from '../services/firebaseService';
 
 interface LoginModalProps {
@@ -56,7 +56,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
     } catch (err: any) {
       console.error(err);
       if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
-        setError('Tài khoản hoặc mật khẩu không chính xác.');
+        setError('Tài khoản chưa tồn tại hoặc sai mật khẩu. Nếu đây là lần đầu sử dụng, vui lòng chuyển sang tab "Đăng ký mới" để tạo tài khoản.');
       } else if (err.code === 'auth/too-many-requests') {
         setError('Đăng nhập sai quá nhiều lần. Vui lòng thử lại sau.');
       } else {
@@ -99,7 +99,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
       } catch (err: any) {
           console.error(err);
           if (err.code === 'auth/email-already-in-use') {
-              setError('Email/Tài khoản này đã được đăng ký.');
+              setError('Email/Tài khoản này đã được đăng ký. Vui lòng đăng nhập.');
           } else if (err.code === 'auth/weak-password') {
               setError('Mật khẩu quá yếu (cần ít nhất 6 ký tự).');
           } else {
@@ -149,13 +149,14 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
         {/* Content */}
         <div className="p-8">
             {error && (
-                <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm text-center border border-red-100 mb-6">
-                {error}
+                <div className="bg-red-50 text-red-700 p-4 rounded-xl text-sm border border-red-100 mb-6 flex items-start gap-2">
+                    <AlertTriangle size={18} className="shrink-0 mt-0.5" />
+                    <span>{error}</span>
                 </div>
             )}
             {successMsg && (
-                <div className="bg-green-50 text-green-700 p-3 rounded-lg text-sm text-center border border-green-100 mb-6">
-                {successMsg}
+                <div className="bg-green-50 text-green-700 p-4 rounded-xl text-sm border border-green-100 mb-6 text-center">
+                    {successMsg}
                 </div>
             )}
 
@@ -187,7 +188,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
                             <label className="block text-sm font-semibold text-slate-700 mb-1">Email / Tài khoản</label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400"><Mail size={20} /></div>
-                                <input type="text" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary-500" placeholder="tên tài khoản" required />
+                                <input type="text" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary-500" placeholder="Tài khoản" required />
                             </div>
                         </div>
                         <div>
@@ -213,6 +214,9 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
 
             {mode === 'REGISTER' && (
                 <form onSubmit={handleRegister} className="space-y-4">
+                    <div className="bg-blue-50 text-blue-700 p-3 rounded-xl text-xs border border-blue-100 mb-4">
+                        💡 Tài khoản mới sẽ được tạo trực tiếp trên hệ thống. Hãy ghi nhớ mật khẩu.
+                    </div>
                     <div>
                         <label className="block text-sm font-semibold text-slate-700 mb-1">Email / Tên đăng nhập</label>
                         <input type="text" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full px-4 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary-500" placeholder="admin hoặc saodo..." required />

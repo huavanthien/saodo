@@ -238,13 +238,13 @@ function App() {
                      <li className="pl-2">
                         Trong trang tổng quan dự án:
                         <ul className="list-disc pl-5 mt-2 space-y-2 text-xs">
-                          <li>Vào <strong>Build</strong> &rarr; <strong>Authentication</strong> &rarr; <strong>Get Started</strong> &rarr; Bật <strong>Email/Password</strong>.</li>
-<li>Vào <strong>Build</strong> &rarr; <strong>Firestore Database</strong> &rarr; <strong>Create Database</strong> &rarr; Chọn <strong>Start in test mode</strong>.</li>
+                           <li>Vào <strong>Build</strong> -> <strong>Authentication</strong> -> <strong>Get Started</strong> -> Bật <strong>Email/Password</strong>.</li>
+                           <li>Vào <strong>Build</strong> -> <strong>Firestore Database</strong> -> <strong>Create Database</strong> -> Chọn <strong>Start in test mode</strong>.</li>
                         </ul>
                      </li>
-                    <li className="pl-2">
-   Vào <strong>Project settings</strong> (icon bánh răng) &rarr; Kéo xuống phần <strong>Your apps</strong> &rarr; Chọn icon <strong>Web (&lt;/&gt;)</strong> để đăng ký app.
-</li>
+                     <li className="pl-2">
+                        Vào <strong>Project settings</strong> (icon bánh răng) -> Kéo xuống phần <strong>Your apps</strong> -> Chọn icon <strong>Web (&lt;/&gt;)</strong> để đăng ký app.
+                     </li>
                      <li className="pl-2">
                         Copy đoạn mã <code>firebaseConfig</code> và dán đè vào file <code>firebaseConfig.ts</code> trong code editor của bạn.
                      </li>
@@ -325,7 +325,7 @@ function App() {
           <div className="md:hidden bg-white px-4 py-3 shadow-sm flex justify-between items-center sticky top-0 z-40">
             <div className="flex items-center gap-2">
               <div className="w-9 h-9 bg-primary-600 rounded-lg flex items-center justify-center text-white font-bold">NH</div>
-              <span className="font-bold text-slate-800 text-lg">Sao Đỏ</span>
+              <span className="font-bold text-slate-800 text-lg">i-Sao đỏ</span>
             </div>
             <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="text-slate-600 p-2 hover:bg-slate-100 rounded-lg">
               {mobileMenuOpen ? <X /> : <Menu />}
@@ -343,8 +343,8 @@ function App() {
                 ★
               </div>
               <div>
-                <h1 className="font-extrabold text-slate-800 text-xl leading-none">Sao Đỏ</h1>
-                <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mt-1">Tiểu học Nguyễn Huệ</p>
+                <h1 className="font-extrabold text-slate-800 text-xl leading-none">i-Sao đỏ</h1>
+                <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mt-1">Thi đua liên đội TH Nguyễn Huệ</p>
               </div>
             </div>
 
@@ -522,6 +522,7 @@ function App() {
                   criteriaList={criteriaList}
                   currentUser={currentUser}
                   logs={logs}
+                  onDelete={handleDeleteLog}
                 />
               )}
 

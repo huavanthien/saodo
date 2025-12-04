@@ -1,3 +1,4 @@
+
 import React, { useMemo, useState, useEffect } from 'react';
 import { DailyLog, ClassEntity, RankingItem } from '../types';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, CartesianGrid } from 'recharts';
@@ -73,7 +74,7 @@ export const Rankings: React.FC<RankingsProps> = ({ logs, classes }) => {
   const getRankStyles = (rank: number) => {
     switch(rank) {
       case 1: return {
-        bg: 'bg-gradient-to-b from-yellow-100 to-white',
+        bg: 'bg-gradient-to-b from-yellow-50 to-white',
         border: 'border-yellow-400',
         text: 'text-yellow-700',
         icon: 'text-yellow-500',
@@ -190,10 +191,25 @@ export const Rankings: React.FC<RankingsProps> = ({ logs, classes }) => {
                  {item.rank}
                </div>
 
-               {isFirst && <Crown className="text-yellow-500 mb-2 animate-bounce" size={32} />}
-               {!isFirst && <div className="h-8"></div>}
+               {isFirst ? (
+                 <div className="relative mb-4 mt-2">
+                    {/* Circle Background for Trophy */}
+                    <div className="w-36 h-36 rounded-full bg-gradient-to-b from-yellow-300 to-yellow-500 shadow-lg border-4 border-white flex flex-col items-center justify-center relative z-10">
+                        <Trophy className="text-white drop-shadow-md mb-2" size={48} strokeWidth={2} />
+                        <div className="bg-white/90 backdrop-blur-sm px-4 py-1 rounded-full shadow-sm mt-1">
+                           <span className="font-black text-yellow-700 text-xl whitespace-nowrap">Lớp {item.className}</span>
+                        </div>
+                    </div>
+                    {/* Glow effect */}
+                    <div className="absolute inset-0 bg-yellow-400 rounded-full blur-2xl opacity-40 animate-pulse"></div>
+                 </div>
+               ) : (
+                 <div className="h-12 w-full flex items-center justify-center mt-4 mb-2">
+                    {item.rank === 2 ? <Medal size={40} className="text-slate-400" /> : <Medal size={40} className="text-orange-400" />}
+                 </div>
+               )}
 
-               <h3 className="text-2xl font-black text-slate-800 mt-4">Lớp {item.className}</h3>
+               {!isFirst && <h3 className="text-2xl font-black text-slate-800 mt-2">Lớp {item.className}</h3>}
                
                <div className="mt-2 text-center">
                  <div className={`text-4xl font-black ${styles.text}`}>

@@ -223,7 +223,7 @@ export const HomePage: React.FC<HomePageProps> = ({
                <span>✉️ lienhe@c1nguyenhue.edu.vn</span>
             </div>
             <div className="pt-8 border-t border-slate-800 mt-8 text-xs font-medium text-slate-600">
-              © {new Date().getFullYear()} Sao đỏ Nguyễn Huệ. Xây dựng vì học sinh thân yêu.
+              © {new Date().getFullYear()} i-Sao đỏ. Xây dựng vì học sinh thân yêu.
             </div>
          </div>
       </footer>
