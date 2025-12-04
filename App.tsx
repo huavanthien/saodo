@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { InputForm } from './components/InputForm';
 import { Rankings } from './components/Rankings';
@@ -9,7 +8,7 @@ import { LoginModal } from './components/LoginModal';
 import { Toast, ToastType } from './components/Toast';
 import { CLASSES as MOCK_CLASSES, INITIAL_LOGS_MOCK, MOCK_ANNOUNCEMENTS, MOCK_USERS, CRITERIA_LIST as MOCK_CRITERIA, SLIDER_IMAGES as MOCK_IMAGES } from './constants';
 import { DailyLog, User, UserRole, ClassEntity, CriteriaConfig, Announcement, SliderImage } from './types';
-import { LayoutDashboard, PenTool, BarChart3, Bot, Menu, X, LogOut, Settings, Award, AlertTriangle, UserCheck, Home, ArrowRight, Database, ExternalLink, Copy, CheckCircle, Crown } from 'lucide-react';
+import { LayoutDashboard, PenTool, BarChart3, Bot, Menu, X, LogOut, Settings, Award, AlertTriangle, UserCheck, Home, Database, ExternalLink } from 'lucide-react';
 import { 
   subscribeToAuth, 
   subscribeToCollection, 
@@ -105,6 +104,7 @@ function App() {
   };
 
   const handleDeleteLog = async (id: string) => {
+    // eslint-disable-next-line no-restricted-globals
     if (confirm("Bạn có chắc chắn muốn xóa phiếu chấm này? Hành động này sẽ cập nhật lại xếp hạng.")) {
         try {
             await deleteLog(id);
@@ -230,7 +230,7 @@ function App() {
                   
                   <ol className="list-decimal pl-5 space-y-4 text-slate-600 text-sm">
                      <li className="pl-2">
-                        Truy cập <a href="https://console.firebase.google.com/" target="_blank" className="text-primary-600 font-bold hover:underline inline-flex items-center gap-1">Firebase Console <ExternalLink size={12}/></a> và đăng nhập bằng Google.
+                        Truy cập <a href="https://console.firebase.google.com/" target="_blank" rel="noreferrer" className="text-primary-600 font-bold hover:underline inline-flex items-center gap-1">Firebase Console <ExternalLink size={12}/></a> và đăng nhập bằng Google.
                      </li>
                      <li className="pl-2">
                         Tạo một dự án mới (Đặt tên là "Sao Do App" hoặc tùy ý).
@@ -238,12 +238,12 @@ function App() {
                      <li className="pl-2">
                         Trong trang tổng quan dự án:
                         <ul className="list-disc pl-5 mt-2 space-y-2 text-xs">
-                           <li>Vào <strong>Build</strong> -> <strong>Authentication</strong> -> <strong>Get Started</strong> -> Bật <strong>Email/Password</strong>.</li>
-                           <li>Vào <strong>Build</strong> -> <strong>Firestore Database</strong> -> <strong>Create Database</strong> -> Chọn <strong>Start in test mode</strong>.</li>
+                           <li>Vào <strong>Build</strong> &rarr; <strong>Authentication</strong> &rarr; <strong>Get Started</strong> &rarr; Bật <strong>Email/Password</strong>.</li>
+                           <li>Vào <strong>Build</strong> &rarr; <strong>Firestore Database</strong> &rarr; <strong>Create Database</strong> &rarr; Chọn <strong>Start in test mode</strong>.</li>
                         </ul>
                      </li>
                      <li className="pl-2">
-                        Vào <strong>Project settings</strong> (icon bánh răng) -> Kéo xuống phần <strong>Your apps</strong> -> Chọn icon <strong>Web (&lt;/&gt;)</strong> để đăng ký app.
+                        Vào <strong>Project settings</strong> (icon bánh răng) &rarr; Kéo xuống phần <strong>Your apps</strong> &rarr; Chọn icon <strong>Web (&lt;/&gt;)</strong> để đăng ký app.
                      </li>
                      <li className="pl-2">
                         Copy đoạn mã <code>firebaseConfig</code> và dán đè vào file <code>firebaseConfig.ts</code> trong code editor của bạn.
@@ -299,15 +299,15 @@ function App() {
           <LoginModal 
             isOpen={showLoginModal} 
             onClose={() => setShowLoginModal(false)} 
-            onLoginSuccess={() => {}} // Handled by auth listener
-            users={users} // For debug reference only
+            onLoginSuccess={() => {}} 
+            users={users} 
           />
           
-          {/* Seed Data Button for Empty State (Helper for initial setup) */}
           {classes.length === 0 && (
              <div className="fixed bottom-4 right-4 z-50">
                  <button 
                     onClick={() => {
+                        // eslint-disable-next-line no-restricted-globals
                         if (confirm("Hành động này sẽ ghi đè dữ liệu mẫu vào Firebase Database. Bạn có chắc chắn không?")) {
                             handleSeedData();
                         }
@@ -349,7 +349,6 @@ function App() {
             </div>
 
             <div className="flex-1 px-4 space-y-1 overflow-y-auto">
-              {/* Home Link */}
               <button
                 onClick={() => setIsInAdminMode(false)}
                 className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 font-bold text-sm text-slate-500 hover:bg-slate-50 hover:text-primary-600 mb-4 group"
@@ -387,7 +386,6 @@ function App() {
                 <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full blur-xl transform translate-x-4 -translate-y-4"></div>
                 <div className="flex items-center gap-2 mb-1">
                    <p className="text-xs text-slate-400 font-bold uppercase">Người dùng</p>
-                   {currentUser.role === UserRole.ADMIN && <Crown size={14} className="text-yellow-400" />}
                 </div>
                 <p className="font-bold text-lg truncate">{currentUser.name}</p>
                 <p className={`text-xs font-medium ${currentUser.role === UserRole.ADMIN ? 'text-yellow-400 font-black uppercase tracking-wider' : 'text-primary-400'}`}>
@@ -405,172 +403,7 @@ function App() {
             </div>
           </nav>
 
-          {/* Overlay for mobile */}
           {mobileMenuOpen && (
             <div 
               className="fixed inset-0 bg-black/40 z-20 md:hidden backdrop-blur-sm"
-              onClick={() => setMobileMenuOpen(false)}
-            />
-          )}
-
-          {/* Main Content */}
-          <main className="flex-1 p-4 md:p-8 overflow-y-auto h-[calc(100vh-64px)] md:h-screen bg-slate-50/50">
-            <header className="mb-8 hidden md:flex justify-between items-center">
-               <div>
-                 <h2 className="text-3xl font-black text-slate-800">
-                   {navItems.find(i => i.id === activeTab)?.label}
-                 </h2>
-                 <p className="text-slate-500 font-medium mt-1">Hệ thống quản lý thi đua trực tuyến (Firebase Realtime)</p>
-               </div>
-               <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-full shadow-sm border border-slate-200">
-                  <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                  <span className="text-sm font-bold text-slate-600">Tuần 12 - Học Kỳ 1</span>
-               </div>
-            </header>
-
-            <div className="max-w-7xl mx-auto animate-fade-in pb-10">
-              {activeTab === 'dashboard' && (
-                 <div className="space-y-8">
-                    {/* Quick Action Section */}
-                    <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col md:flex-row items-center justify-between gap-4">
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 bg-primary-100 rounded-2xl flex items-center justify-center text-primary-600">
-                                <PenTool size={24} />
-                            </div>
-                            <div>
-                                <h3 className="text-lg font-bold text-slate-800">Bắt đầu phiên làm việc</h3>
-                                <p className="text-slate-500 text-sm">Cập nhật điểm thi đua và nề nếp cho các lớp.</p>
-                            </div>
-                        </div>
-                        <button 
-                            onClick={() => setActiveTab('input')}
-                            className="bg-primary-600 hover:bg-primary-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg shadow-primary-500/30 flex items-center gap-2 transition transform hover:scale-105 active:scale-95 w-full md:w-auto justify-center"
-                        >
-                            <PenTool size={18} />
-                            Chấm điểm cho lớp
-                        </button>
-                    </div>
-
-                    {/* Stats Cards */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                      <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 relative overflow-hidden group hover:shadow-lg transition-all">
-                        <div className="absolute right-0 top-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                          <PenTool size={80} />
-                        </div>
-                        <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-600 mb-4">
-                          <PenTool size={24} />
-                        </div>
-                        <p className="text-slate-500 text-sm font-bold uppercase tracking-wide">Số phiếu chấm</p>
-                        <p className="text-4xl font-black text-slate-800 mt-1">{logs.length}</p>
-                      </div>
-
-                      <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 relative overflow-hidden group hover:shadow-lg transition-all">
-                        <div className="absolute right-0 top-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                           <Award size={80} />
-                        </div>
-                        <div className="w-12 h-12 bg-yellow-100 rounded-2xl flex items-center justify-center text-yellow-600 mb-4">
-                          <Award size={24} />
-                        </div>
-                        <p className="text-slate-500 text-sm font-bold uppercase tracking-wide">Lớp dẫn đầu</p>
-                        <p className="text-4xl font-black text-slate-800 mt-1 truncate">
-                           {/* Simple logic for demo */}
-                           {classes.length > 0 ? classes[0].name : 'N/A'}
-                        </p>
-                      </div>
-
-                      <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 relative overflow-hidden group hover:shadow-lg transition-all">
-                        <div className="absolute right-0 top-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                          <AlertTriangle size={80} />
-                        </div>
-                        <div className="w-12 h-12 bg-red-100 rounded-2xl flex items-center justify-center text-red-600 mb-4">
-                          <AlertTriangle size={24} />
-                        </div>
-                        <p className="text-slate-500 text-sm font-bold uppercase tracking-wide">Lỗi vi phạm</p>
-                        <p className="text-4xl font-black text-slate-800 mt-1">
-                          {logs.reduce((acc, log) => acc + log.deductions.length, 0)}
-                        </p>
-                      </div>
-
-                      <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 relative overflow-hidden group hover:shadow-lg transition-all">
-                        <div className="absolute right-0 top-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                          <UserCheck size={80} />
-                        </div>
-                        <div className="w-12 h-12 bg-purple-100 rounded-2xl flex items-center justify-center text-purple-600 mb-4">
-                          <UserCheck size={24} />
-                        </div>
-                        <p className="text-slate-500 text-sm font-bold uppercase tracking-wide">Sao Đỏ</p>
-                        <p className="text-4xl font-black text-slate-800 mt-1">
-                          {users.filter(u => u.role === UserRole.RED_STAR).length}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="mt-8 bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-100">
-                      <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-                        <Award className="text-primary-600" />
-                        Tổng quan xếp hạng tuần này
-                      </h3>
-                      <Rankings logs={logs} classes={classes} />
-                    </div>
-                 </div>
-              )}
-
-              {activeTab === 'input' && (
-                <InputForm 
-                  onSave={handleSaveLog} 
-                  classes={classes} 
-                  criteriaList={criteriaList}
-                  currentUser={currentUser}
-                  logs={logs}
-                  onDelete={handleDeleteLog}
-                />
-              )}
-
-              {activeTab === 'rankings' && (
-                <div className="bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-100">
-                   <Rankings logs={logs} classes={classes} />
-                </div>
-              )}
-
-              {activeTab === 'ai' && currentUser.role === UserRole.ADMIN && (
-                <AIReport logs={logs} classes={classes} criteriaList={criteriaList} />
-              )}
-
-              {activeTab === 'management' && currentUser.role === UserRole.ADMIN && (
-                <AdminManagement 
-                  users={users}
-                  classes={classes}
-                  criteria={criteriaList}
-                  announcements={announcements}
-                  images={sliderImages}
-                  logs={logs}
-                  onAddUser={handleAddUser}
-                  onUpdateUser={handleUpdateUser}
-                  onDeleteUser={handleDeleteUser}
-                  onAddClass={handleAddClass}
-                  onUpdateClass={handleUpdateClass}
-                  onDeleteClass={handleDeleteClass}
-                  onAddCriteria={handleAddCriteria}
-                  onUpdateCriteria={handleUpdateCriteria}
-                  onDeleteCriteria={handleDeleteCriteria}
-                  onAddAnnouncement={handleAddAnnouncement}
-                  onUpdateAnnouncement={handleUpdateAnnouncement}
-                  onDeleteAnnouncement={handleDeleteAnnouncement}
-                  onAddImage={handleAddImage}
-                  onUpdateImage={handleUpdateImage}
-                  onDeleteImage={handleDeleteImage}
-                  onSeedData={handleSeedData}
-                  onClearData={handleClearData}
-                  onDeleteLog={handleDeleteLog}
-                  showToast={showToast}
-                />
-              )}
-            </div>
-          </main>
-        </div>
-      )}
-    </>
-  );
-}
-
-export default App;
+              onClick={() => setMobileMenu
