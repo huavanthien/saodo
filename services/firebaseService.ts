@@ -1,81 +1,153 @@
 
-import { auth, db } from "../firebaseConfig";
 import { User, UserRole, ClassEntity, DailyLog, Announcement, CriteriaConfig, SliderImage } from "../types";
-// Using Compat SDK, we don't import modular functions
-import firebase from "firebase/compat/app";
+import { 
+  INITIAL_LOGS_MOCK, 
+  CLASSES as MOCK_CLASSES, 
+  MOCK_USERS, 
+  CRITERIA_LIST as MOCK_CRITERIA, 
+  MOCK_ANNOUNCEMENTS, 
+  SLIDER_IMAGES as MOCK_IMAGES 
+} from "../constants";
 
-// --- COLLECTION REFERENCES ---
-const COLLECTIONS = {
-  USERS: 'users',
-  CLASSES: 'classes',
-  LOGS: 'logs',
-  CRITERIA: 'criteria',
-  ANNOUNCEMENTS: 'announcements',
-  IMAGES: 'slider_images'
+// --- LOCAL STORAGE KEYS ---
+const KEYS = {
+  USERS: 'saodo_users',
+  CLASSES: 'saodo_classes',
+  LOGS: 'saodo_logs',
+  CRITERIA: 'saodo_criteria',
+  ANNOUNCEMENTS: 'saodo_announcements',
+  IMAGES: 'saodo_images',
+  CURRENT_USER: 'saodo_current_user'
 };
 
-// --- AUTH SERVICES ---
+// --- PUBSUB SYSTEM (Simulate Realtime) ---
+// This allows different parts of the app to react when data changes in LocalStorage
+const listeners: Record<string, Function[]> = {};
+
+const subscribe = (key: string, callback: Function) => {
+  if (!listeners[key]) listeners[key] = [];
+  listeners[key].push(callback);
+  return () => {
+    listeners[key] = listeners[key].filter(cb => cb !== callback);
+  };
+};
+
+const notify = (key: string, data: any) => {
+  if (listeners[key]) {
+    listeners[key].forEach(cb => cb(data));
+  }
+};
+
+// --- HELPER FUNCTIONS ---
+const getLocal = <T>(key: string, defaultVal: T): T => {
+  const data = localStorage.getItem(key);
+  return data ? JSON.parse(data) : defaultVal;
+};
+
+const setLocal = (key: string, data: any) => {
+  localStorage.setItem(key, JSON.stringify(data));
+  notify(key, data);
+};
+
+// Initialize Data if empty
+const initializeLocalStorage = () => {
+  if (!localStorage.getItem(KEYS.CLASSES)) setLocal(KEYS.CLASSES, MOCK_CLASSES);
+  if (!localStorage.getItem(KEYS.CRITERIA)) setLocal(KEYS.CRITERIA, MOCK_CRITERIA);
+  if (!localStorage.getItem(KEYS.ANNOUNCEMENTS)) setLocal(KEYS.ANNOUNCEMENTS, MOCK_ANNOUNCEMENTS);
+  if (!localStorage.getItem(KEYS.IMAGES)) setLocal(KEYS.IMAGES, MOCK_IMAGES);
+  if (!localStorage.getItem(KEYS.USERS)) setLocal(KEYS.USERS, MOCK_USERS);
+  // Logs can be empty initially or seeded
+  if (!localStorage.getItem(KEYS.LOGS)) setLocal(KEYS.LOGS, []); 
+};
+
+// Run initialization once on load
+initializeLocalStorage();
+
+// --- AUTH SERVICES (MOCK) ---
 
 export const loginUser = async (email: string, pass: string) => {
-  return await auth.signInWithEmailAndPassword(email, pass);
+  // Simulate network delay
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  const users = getLocal<User[]>(KEYS.USERS, []);
+  // Simple check (In real local app, passwords should be hashed, but this is a mock)
+  const user = users.find(u => 
+    (u.username === email || u.username === email + '@nguyenhue.edu.vn') && 
+    u.password === pass
+  );
+
+  if (user) {
+    // Save session
+    localStorage.setItem(KEYS.CURRENT_USER, JSON.stringify(user));
+    notify('auth', user);
+    return { user: { email: user.username } };
+  } else {
+    throw { code: 'auth/invalid-credential', message: 'Sai tài khoản hoặc mật khẩu' };
+  }
 };
 
 export const registerUser = async (email: string, pass: string) => {
-  return await auth.createUserWithEmailAndPassword(email, pass);
+  await new Promise(resolve => setTimeout(resolve, 500));
+  const users = getLocal<User[]>(KEYS.USERS, []);
+  
+  if (users.some(u => u.username === email)) {
+    throw { code: 'auth/email-already-in-use', message: 'Tài khoản đã tồn tại' };
+  }
+  // Note: Actual user creation happens in saveUserFirestore for the metadata
+  // Here we just return success to satisfy the interface
+  return { user: { email } };
 };
 
 export const logoutUser = async () => {
-  return await auth.signOut();
+  localStorage.removeItem(KEYS.CURRENT_USER);
+  notify('auth', null);
 };
 
 export const resetPassword = async (email: string) => {
-  return await auth.sendPasswordResetEmail(email);
+  // Mock sending email
+  await new Promise(resolve => setTimeout(resolve, 800));
+  const users = getLocal<User[]>(KEYS.USERS, []);
+  const user = users.find(u => u.username === email);
+  if (!user) throw { code: 'auth/user-not-found' };
+  console.log(`[MOCK EMAIL] Password reset link sent to ${email}`);
 };
 
-// Lắng nghe trạng thái đăng nhập và lấy thêm thông tin role từ Firestore
 export const subscribeToAuth = (callback: (user: User | null) => void) => {
-  return auth.onAuthStateChanged(async (fbUser) => {
-    if (fbUser) {
-      // Lấy thông tin role từ Firestore
-      const userRef = db.collection(COLLECTIONS.USERS).doc(fbUser.email!);
-      const userDoc = await userRef.get();
-      
-      if (userDoc.exists) {
-        const userData = userDoc.data() as User;
-        callback({ ...userData, password: '' }); // Không trả về password
-      } else {
-        // Fallback: Nếu user chưa có trong Firestore
-        // QUAN TRỌNG: Nếu email là admin... -> Cấp quyền ADMIN luôn
-        const isAdminEmail = fbUser.email?.startsWith('admin');
-        
-        const newUser: User = {
-          username: fbUser.email!,
-          name: isAdminEmail ? 'Tổng Phụ Trách' : (fbUser.displayName || 'Người dùng mới'),
-          role: isAdminEmail ? UserRole.ADMIN : UserRole.RED_STAR,
-          assignedClassIds: []
-        };
-        
-        // Tự động lưu user này vào Firestore để lần sau không bị fallback nữa
-        await saveUserFirestore(newUser);
+  // Check initial state
+  const storedUser = localStorage.getItem(KEYS.CURRENT_USER);
+  if (storedUser) {
+    callback(JSON.parse(storedUser));
+  } else {
+    callback(null);
+  }
 
-        callback(newUser);
-      }
-    } else {
-      callback(null);
-    }
-  });
+  // Listen for changes
+  return subscribe('auth', callback);
 };
 
-// --- DATA SERVICES (REALTIME) ---
+// --- DATA SERVICES (REALTIME MOCK) ---
+
+// Map collection names to storage keys
+const KEY_MAP: Record<string, string> = {
+  'logs': KEYS.LOGS,
+  'classes': KEYS.CLASSES,
+  'criteria': KEYS.CRITERIA,
+  'announcements': KEYS.ANNOUNCEMENTS,
+  'slider_images': KEYS.IMAGES,
+  'users': KEYS.USERS
+};
 
 export const subscribeToCollection = (collectionName: string, callback: (data: any[]) => void) => {
-  const colRef = db.collection(collectionName);
-  return colRef.onSnapshot((snapshot) => {
-    const data = snapshot.docs.map(doc => ({
-      ...doc.data(),
-      id: doc.id
-    }));
-    callback(data);
+  const key = KEY_MAP[collectionName];
+  if (!key) return () => {};
+
+  // Initial fetch
+  const data = getLocal<any[]>(key, []);
+  callback(data);
+
+  // Subscribe to changes
+  return subscribe(key, (newData: any[]) => {
+    callback(newData);
   });
 };
 
@@ -83,130 +155,138 @@ export const subscribeToCollection = (collectionName: string, callback: (data: a
 
 // Users
 export const saveUserFirestore = async (user: User) => {
-  // Dùng email làm Document ID để dễ query
-  const email = user.username.includes('@') ? user.username : `${user.username}@nguyenhue.edu.vn`;
-  const userRef = db.collection(COLLECTIONS.USERS).doc(email);
-  await userRef.set({
-    ...user,
-    username: email // Chuẩn hóa thành email
-  });
+  const users = getLocal<User[]>(KEYS.USERS, []);
+  const index = users.findIndex(u => u.username === user.username);
+  
+  if (index >= 0) {
+    users[index] = { ...users[index], ...user }; // Update, keeping password if not provided
+  } else {
+    // New user
+    users.push(user);
+  }
+  setLocal(KEYS.USERS, users);
 };
 
 export const deleteUserFirestore = async (username: string) => {
-    // username ở đây đang là email
-    const userRef = db.collection(COLLECTIONS.USERS).doc(username);
-    await userRef.delete();
+  let users = getLocal<User[]>(KEYS.USERS, []);
+  users = users.filter(u => u.username !== username);
+  setLocal(KEYS.USERS, users);
 };
 
 // Classes
 export const addClass = async (cls: ClassEntity) => {
-  if(cls.id) {
-     const clsRef = db.collection(COLLECTIONS.CLASSES).doc(cls.id);
-     await clsRef.set(cls);
-  } else {
-     const colRef = db.collection(COLLECTIONS.CLASSES);
-     await colRef.add(cls);
-  }
+  const classes = getLocal<ClassEntity[]>(KEYS.CLASSES, []);
+  if (!cls.id) cls.id = cls.name; // Simple ID generation
+  classes.push(cls);
+  setLocal(KEYS.CLASSES, classes);
 };
 export const updateClass = async (cls: ClassEntity) => {
-  const clsRef = db.collection(COLLECTIONS.CLASSES).doc(cls.id);
-  await clsRef.update({ ...cls });
+  let classes = getLocal<ClassEntity[]>(KEYS.CLASSES, []);
+  const idx = classes.findIndex(c => c.id === cls.id);
+  if (idx !== -1) {
+    classes[idx] = cls;
+    setLocal(KEYS.CLASSES, classes);
+  }
 };
 export const deleteClass = async (id: string) => {
-  const clsRef = db.collection(COLLECTIONS.CLASSES).doc(id);
-  await clsRef.delete();
+  let classes = getLocal<ClassEntity[]>(KEYS.CLASSES, []);
+  classes = classes.filter(c => c.id !== id);
+  setLocal(KEYS.CLASSES, classes);
 };
 
 // Logs
 export const addLog = async (log: DailyLog) => {
-  const logRef = db.collection(COLLECTIONS.LOGS).doc(log.id);
-  await logRef.set(log);
+  const logs = getLocal<DailyLog[]>(KEYS.LOGS, []);
+  // Check if exists (overwrite)
+  const idx = logs.findIndex(l => l.id === log.id);
+  if (idx !== -1) {
+    logs[idx] = log;
+  } else {
+    logs.push(log);
+  }
+  setLocal(KEYS.LOGS, logs);
 };
 export const deleteLog = async (id: string) => {
-  const logRef = db.collection(COLLECTIONS.LOGS).doc(id);
-  await logRef.delete();
+  let logs = getLocal<DailyLog[]>(KEYS.LOGS, []);
+  logs = logs.filter(l => l.id !== id);
+  setLocal(KEYS.LOGS, logs);
 };
 
 // Criteria
 export const addCriteria = async (crit: CriteriaConfig) => {
-   const critRef = db.collection(COLLECTIONS.CRITERIA).doc(crit.id);
-   await critRef.set(crit);
+  const list = getLocal<CriteriaConfig[]>(KEYS.CRITERIA, []);
+  list.push(crit);
+  setLocal(KEYS.CRITERIA, list);
 };
 export const updateCriteria = async (crit: CriteriaConfig) => {
-  const critRef = db.collection(COLLECTIONS.CRITERIA).doc(crit.id);
-  await critRef.update({ ...crit });
+  let list = getLocal<CriteriaConfig[]>(KEYS.CRITERIA, []);
+  const idx = list.findIndex(c => c.id === crit.id);
+  if (idx !== -1) {
+    list[idx] = crit;
+    setLocal(KEYS.CRITERIA, list);
+  }
 };
 export const deleteCriteria = async (id: string) => {
-  const critRef = db.collection(COLLECTIONS.CRITERIA).doc(id);
-  await critRef.delete();
+  let list = getLocal<CriteriaConfig[]>(KEYS.CRITERIA, []);
+  list = list.filter(c => c.id !== id);
+  setLocal(KEYS.CRITERIA, list);
 };
 
 // Announcements
 export const addAnnouncement = async (ann: Announcement) => {
-    const annRef = db.collection(COLLECTIONS.ANNOUNCEMENTS).doc(ann.id);
-    await annRef.set(ann);
+  const list = getLocal<Announcement[]>(KEYS.ANNOUNCEMENTS, []);
+  list.push(ann);
+  setLocal(KEYS.ANNOUNCEMENTS, list);
 };
 export const updateAnnouncement = async (ann: Announcement) => {
-    const annRef = db.collection(COLLECTIONS.ANNOUNCEMENTS).doc(ann.id);
-    await annRef.update({ ...ann });
+  let list = getLocal<Announcement[]>(KEYS.ANNOUNCEMENTS, []);
+  const idx = list.findIndex(a => a.id === ann.id);
+  if (idx !== -1) {
+    list[idx] = ann;
+    setLocal(KEYS.ANNOUNCEMENTS, list);
+  }
 };
 export const deleteAnnouncement = async (id: string) => {
-    const annRef = db.collection(COLLECTIONS.ANNOUNCEMENTS).doc(id);
-    await annRef.delete();
+  let list = getLocal<Announcement[]>(KEYS.ANNOUNCEMENTS, []);
+  list = list.filter(a => a.id !== id);
+  setLocal(KEYS.ANNOUNCEMENTS, list);
 };
 
 // Images
 export const addImage = async (img: SliderImage) => {
-    const imgRef = db.collection(COLLECTIONS.IMAGES).doc(img.id);
-    await imgRef.set(img);
+  const list = getLocal<SliderImage[]>(KEYS.IMAGES, []);
+  list.push(img);
+  setLocal(KEYS.IMAGES, list);
 };
 export const updateImage = async (img: SliderImage) => {
-    const imgRef = db.collection(COLLECTIONS.IMAGES).doc(img.id);
-    await imgRef.update({ ...img });
+  let list = getLocal<SliderImage[]>(KEYS.IMAGES, []);
+  const idx = list.findIndex(i => i.id === img.id);
+  if (idx !== -1) {
+    list[idx] = img;
+    setLocal(KEYS.IMAGES, list);
+  }
 };
 export const deleteImage = async (id: string) => {
-    const imgRef = db.collection(COLLECTIONS.IMAGES).doc(id);
-    await imgRef.delete();
+  let list = getLocal<SliderImage[]>(KEYS.IMAGES, []);
+  list = list.filter(i => i.id !== id);
+  setLocal(KEYS.IMAGES, list);
 };
 
 // --- DATA MANAGEMENT UTILITIES ---
 
-const clearCollection = async (collectionName: string) => {
-    const colRef = db.collection(collectionName);
-    const snapshot = await colRef.get();
-    
-    // Batch only supports 500 ops.
-    const chunk_size = 500;
-    const docs = snapshot.docs;
-    
-    for (let i = 0; i < docs.length; i += chunk_size) {
-        const chunk = docs.slice(i, i + chunk_size);
-        const batch = db.batch();
-        chunk.forEach(docSnap => batch.delete(docSnap.ref));
-        await batch.commit();
-    }
-};
-
 export const clearDatabase = async () => {
-    await clearCollection(COLLECTIONS.LOGS);
-    await clearCollection(COLLECTIONS.CLASSES);
-    await clearCollection(COLLECTIONS.CRITERIA);
-    await clearCollection(COLLECTIONS.ANNOUNCEMENTS);
-    await clearCollection(COLLECTIONS.IMAGES);
-};
-
-// Helper function to execute batch operations
-const executeBatch = async (operations: { type: 'set', ref: any, data: any }[]) => {
-    const CHUNK_SIZE = 500; // Firestore limit
-    for (let i = 0; i < operations.length; i += CHUNK_SIZE) {
-        const chunk = operations.slice(i, i + CHUNK_SIZE);
-        const batch = db.batch();
-        chunk.forEach(op => {
-            batch.set(op.ref, op.data);
-        });
-        await batch.commit();
-        console.log(`Committed batch ${i / CHUNK_SIZE + 1} with ${chunk.length} operations.`);
-    }
+  localStorage.removeItem(KEYS.LOGS);
+  localStorage.removeItem(KEYS.CLASSES);
+  localStorage.removeItem(KEYS.CRITERIA);
+  localStorage.removeItem(KEYS.ANNOUNCEMENTS);
+  localStorage.removeItem(KEYS.IMAGES);
+  // Keep Users to prevent lockout, or clear them too if requested
+  // setLocal(KEYS.LOGS, []); ...
+  notify(KEYS.LOGS, []);
+  notify(KEYS.CLASSES, []);
+  notify(KEYS.CRITERIA, []);
+  notify(KEYS.ANNOUNCEMENTS, []);
+  notify(KEYS.IMAGES, []);
 };
 
 export const seedDatabase = async (
@@ -217,30 +297,14 @@ export const seedDatabase = async (
     images: SliderImage[],
     users: User[]
 ) => {
-    const operations: { type: 'set', ref: any, data: any }[] = [];
-
-    classes.forEach(c => {
-        operations.push({ type: 'set', ref: db.collection(COLLECTIONS.CLASSES).doc(c.id), data: c });
-    });
-    criteria.forEach(c => {
-        operations.push({ type: 'set', ref: db.collection(COLLECTIONS.CRITERIA).doc(c.id), data: c });
-    });
-    logs.forEach(l => {
-        operations.push({ type: 'set', ref: db.collection(COLLECTIONS.LOGS).doc(l.id), data: l });
-    });
-    announcements.forEach(a => {
-        operations.push({ type: 'set', ref: db.collection(COLLECTIONS.ANNOUNCEMENTS).doc(a.id), data: a });
-    });
-    images.forEach(i => {
-        operations.push({ type: 'set', ref: db.collection(COLLECTIONS.IMAGES).doc(i.id), data: i });
-    });
-    users.forEach(u => {
-        const email = u.username.includes('@') ? u.username : `${u.username}@nguyenhue.edu.vn`;
-        // Normalize username to email for ID
-        operations.push({ type: 'set', ref: db.collection(COLLECTIONS.USERS).doc(email), data: { ...u, username: email } });
-    });
-
-    console.log(`Starting seed with ${operations.length} records...`);
-    await executeBatch(operations);
-    console.log("Database seeded successfully!");
+    setLocal(KEYS.CLASSES, classes);
+    setLocal(KEYS.CRITERIA, criteria);
+    setLocal(KEYS.LOGS, logs);
+    setLocal(KEYS.ANNOUNCEMENTS, announcements);
+    setLocal(KEYS.IMAGES, images);
+    
+    // Merge users instead of overwrite to keep current session valid if possible
+    // But for seeding, overwrite is usually expected.
+    // Let's check if Admin exists, if not ensure it does.
+    setLocal(KEYS.USERS, users);
 };

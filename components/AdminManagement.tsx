@@ -421,25 +421,33 @@ export const AdminManagement: React.FC<AdminManagementProps> = ({
             };
         });
 
+        // Safe XLSX Access (MJS import fix)
         // @ts-ignore
-        const worksheet = XLSX.utils.json_to_sheet(rows);
+        const utils = XLSX.utils || (XLSX.default ? XLSX.default.utils : undefined);
         // @ts-ignore
-        const workbook = XLSX.utils.book_new();
+        const writeFile = XLSX.writeFile || (XLSX.default ? XLSX.default.writeFile : undefined);
+
+        if (!utils || !writeFile) {
+            console.error("XLSX Library not loaded properly", XLSX);
+            throw new Error("Thư viện Excel chưa sẵn sàng. Vui lòng tải lại trang.");
+        }
+
+        const worksheet = utils.json_to_sheet(rows);
+        // @ts-ignore
+        const workbook = utils.book_new();
         
         const wscols = [
             {wch: 15}, {wch: 12}, {wch: 8}, {wch: 8}, {wch: 20}, {wch: 10}, {wch: 10}, {wch: 10}, {wch: 50}, {wch: 40}
         ];
         worksheet['!cols'] = wscols;
 
-        // @ts-ignore
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Báo cáo");
-        // @ts-ignore
-        XLSX.writeFile(workbook, `${fileName}.xlsx`);
+        utils.book_append_sheet(workbook, worksheet, "Báo cáo");
+        writeFile(workbook, `${fileName}.xlsx`);
         
         showToast("Xuất báo cáo thành công!", 'success');
-    } catch (error) {
+    } catch (error: any) {
         console.error(error);
-        showToast("Có lỗi khi xuất file Excel!", 'error');
+        showToast("Lỗi khi xuất file Excel: " + (error.message || ""), 'error');
     }
   };
 

@@ -19,6 +19,13 @@ interface DeductionItem {
     note: string;
 }
 
+// Helper để lấy ngày địa phương YYYY-MM-DD chính xác
+const getLocalDateString = () => {
+    const d = new Date();
+    // Sử dụng sv-SE để có định dạng YYYY-MM-DD ổn định
+    return d.toLocaleDateString('sv-SE');
+};
+
 export const InputForm: React.FC<InputFormProps> = ({ onSave, classes, criteriaList, currentUser, logs = [], onDelete }) => {
   // Lọc danh sách lớp được phân công
   const availableClasses = useMemo(() => {
@@ -33,7 +40,8 @@ export const InputForm: React.FC<InputFormProps> = ({ onSave, classes, criteriaL
   }, [classes, currentUser]);
 
   const [selectedClass, setSelectedClass] = useState<string>('');
-  const [date, setDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  // BUG FIX: Dùng getLocalDateString() thay vì toISOString().split('T')[0] để tránh lệch múi giờ
+  const [date, setDate] = useState<string>(getLocalDateString());
   const [week, setWeek] = useState<number>(12); 
   const [reporterName, setReporterName] = useState<string>('');
   
