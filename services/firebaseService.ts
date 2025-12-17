@@ -70,11 +70,24 @@ export const loginUser = async (email: string, pass: string) => {
   await new Promise(resolve => setTimeout(resolve, 500));
   
   const users = getLocal<User[]>(KEYS.USERS, []);
-  // Simple check (In real local app, passwords should be hashed, but this is a mock)
-  const user = users.find(u => 
+  
+  // Try to find user in LocalStorage
+  let user = users.find(u => 
     (u.username === email || u.username === email + '@nguyenhue.edu.vn') && 
     u.password === pass
   );
+
+  // FAILSAFE: If not found in LocalStorage, check the hardcoded constants
+  // This ensures the requested admin login always works even if LS is stale
+  if (!user) {
+     const mockAdmin = MOCK_USERS.find(u =>
+        (u.username === email || u.username === email + '@nguyenhue.edu.vn') &&
+        u.password === pass &&
+        u.role === UserRole.ADMIN
+     );
+     // If found in mocks but not in LS, return it as valid
+     if (mockAdmin) user = mockAdmin;
+  }
 
   if (user) {
     // Save session

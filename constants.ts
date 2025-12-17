@@ -1,5 +1,4 @@
 
-
 import { ClassEntity, CriteriaConfig, CriteriaType, Announcement, User, UserRole, DailyLog, SliderImage } from './types';
 
 // Danh sách lớp mới cập nhật
