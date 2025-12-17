@@ -205,15 +205,29 @@ export const InputForm: React.FC<InputFormProps> = ({ onSave, classes, criteriaL
 
   const handleReset = async () => {
      if (!selectedClass || !date) return;
-     if (!confirm(`Bạn có chắc chắn muốn XÓA kết quả chấm của lớp ${selectedClass} ngày ${date}?`)) return;
+     if (!confirm(`Bạn có chắc chắn muốn ĐẶT LẠI điểm lớp ${selectedClass} về 100 (Xóa hết lỗi)?`)) return;
 
-     if (onDelete) {
-         setIsSaving(true);
-         // ID is always date-classId
+     setIsSaving(true);
+     try {
+         // Overwrite with a clean log
          const logId = `${date}-${selectedClass}`;
-         await onDelete(logId);
+         const resetLog: DailyLog = {
+            id: logId,
+            date,
+            week,
+            classId: selectedClass,
+            deductions: [],
+            bonusPoints: 0,
+            totalScore: 100,
+            reporterName,
+            comment: 'Đã đặt lại về 100 điểm.'
+         };
+         await onSave(resetLog);
+         // UI updates automatically via listener
+     } catch (e) {
+         alert("Lỗi khi đặt lại điểm.");
+     } finally {
          setIsSaving(false);
-         // Reset UI handled by useEffect when log disappears from props
      }
   };
 
@@ -514,7 +528,7 @@ export const InputForm: React.FC<InputFormProps> = ({ onSave, classes, criteriaL
                                     className="flex-1 sm:flex-none px-6 py-3 rounded-xl border-2 border-red-100 text-red-600 font-bold hover:bg-red-50 transition flex items-center justify-center gap-2"
                                 >
                                     <RotateCcw size={20} /> 
-                                    <span className="hidden sm:inline">Hủy / Làm lại</span>
+                                    <span className="hidden sm:inline">Đặt lại 100đ</span>
                                 </button>
                             )}
 

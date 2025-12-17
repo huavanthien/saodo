@@ -48,8 +48,39 @@ export const Rankings: React.FC<RankingsProps> = ({ logs, classes }) => {
     const data: RankingItem[] = classes.map(cls => {
       const classLogs = filteredLogs.filter(l => l.classId === cls.id);
       
-      const totalScore = classLogs.reduce((acc, curr) => acc + curr.totalScore, 0);
       const violationCount = classLogs.reduce((acc, curr) => acc + curr.deductions.length, 0);
+      
+      let totalScore = 0;
+      
+      if (viewType === 'week') {
+         // Weekly Calculation: 100 - Total Deductions + Total Bonus
+         const totalDeducted = classLogs.reduce((acc, curr) => 
+            acc + curr.deductions.reduce((dAcc, d) => dAcc + d.pointsLost, 0), 0);
+         const totalBonus = classLogs.reduce((acc, curr) => acc + curr.bonusPoints, 0);
+         
+         // Base 100 for the week
+         totalScore = 100 - totalDeducted + totalBonus;
+      } else {
+         // Semester/Year: Sum of Weekly Scores
+         // We must group by week to calculate each week's score (which is 100 - ded + bonus)
+         const logsByWeek = new Map<number, DailyLog[]>();
+         classLogs.forEach(log => {
+             const w = log.week;
+             if (!logsByWeek.has(w)) logsByWeek.set(w, []);
+             logsByWeek.get(w)?.push(log);
+         });
+         
+         let sumScore = 0;
+         logsByWeek.forEach((weeklyLogs) => {
+             const weeklyDeducted = weeklyLogs.reduce((acc, curr) => 
+                acc + curr.deductions.reduce((dAcc, d) => dAcc + d.pointsLost, 0), 0);
+             const weeklyBonus = weeklyLogs.reduce((acc, curr) => acc + curr.bonusPoints, 0);
+             const weeklyScore = 100 - weeklyDeducted + weeklyBonus;
+             sumScore += weeklyScore;
+         });
+         
+         totalScore = sumScore;
+      }
       
       return {
         classId: cls.id,
@@ -115,6 +146,14 @@ export const Rankings: React.FC<RankingsProps> = ({ logs, classes }) => {
   }, [selectedClassId, logs, viewType, selectedWeek, selectedSemester]);
 
   const selectedClassInfo = classes.find(c => c.id === selectedClassId);
+
+  // Helper to determine good/bad threshold dynamically based on weeks
+  const getThreshold = () => {
+      if (viewType === 'week') return 95;
+      // Rough estimate for semester/year
+      const weeks = viewType === 'semester' ? 18 : 35;
+      return 95 * weeks * 0.8; // Tolerance
+  };
 
   return (
     <div className="space-y-8">
@@ -327,7 +366,7 @@ export const Rankings: React.FC<RankingsProps> = ({ logs, classes }) => {
                            )}
                         </td>
                         <td className="p-4 text-right pr-6">
-                          {item.totalScore >= (viewType === 'week' ? 95 : 95 * (viewType === 'semester' ? 18 : 35)) ? (
+                          {item.totalScore >= getThreshold() ? (
                             <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">
                               <CheckCircle2 size={12} /> Tốt
                             </span>
@@ -366,7 +405,7 @@ export const Rankings: React.FC<RankingsProps> = ({ logs, classes }) => {
                       {viewType === 'week' ? `Tuần ${selectedWeek}` : viewType === 'semester' ? `Học kỳ ${selectedSemester}` : 'Cả năm'}
                     </span>
                     <span className="text-xs font-bold bg-primary-600 px-3 py-1 rounded-full">
-                       Tổng {selectedClassLogs.reduce((acc, l) => acc + l.totalScore, 0)} điểm
+                       Tổng {selectedClassLogs.reduce((acc, l) => acc + l.totalScore, 0)} điểm (Nhật ký)
                     </span>
                   </div>
                </div>
@@ -402,7 +441,8 @@ export const Rankings: React.FC<RankingsProps> = ({ logs, classes }) => {
                              </div>
                            </div>
                            <div className="text-xl font-black text-primary-600">
-                             {log.totalScore}đ
+                             {/* Display daily score logic */}
+                             {100 - log.deductions.reduce((a,b) => a+b.pointsLost,0) + log.bonusPoints}đ
                            </div>
                         </div>
                         
