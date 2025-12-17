@@ -56,7 +56,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
     } catch (err: any) {
       console.error(err);
       if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
-        setError('Tài khoản chưa tồn tại hoặc sai mật khẩu. Nếu đây là lần đầu sử dụng, vui lòng chuyển sang tab "Đăng ký mới" để tạo tài khoản.');
+        setError('Tài khoản chưa tồn tại hoặc sai mật khẩu. Vui lòng chuyển sang tab "Đăng ký" để tạo tài khoản mới.');
       } else if (err.code === 'auth/too-many-requests') {
         setError('Đăng nhập sai quá nhiều lần. Vui lòng thử lại sau.');
       } else {
@@ -215,7 +215,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose }) => {
             {mode === 'REGISTER' && (
                 <form onSubmit={handleRegister} className="space-y-4">
                     <div className="bg-blue-50 text-blue-700 p-3 rounded-xl text-xs border border-blue-100 mb-4">
-                        💡 Tài khoản mới sẽ được tạo trực tiếp trên hệ thống. Hãy ghi nhớ mật khẩu.
+                        💡 Tài khoản mới sẽ được tạo trực tiếp trên hệ thống.
                     </div>
                     <div>
                         <label className="block text-sm font-semibold text-slate-700 mb-1">Email / Tên đăng nhập</label>

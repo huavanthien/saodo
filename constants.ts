@@ -194,7 +194,7 @@ export const SLIDER_IMAGES: SliderImage[] = [
   },
   {
     id: 'img2',
-    url: 'https://example.com/new_image.jpg',
+    url: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?q=80&w=800&auto=format&fit=crop',
     title: 'Hoạt động ngoại khóa Hè',
     subtitle: 'Các trò chơi tập thể vui nhộn'
   },

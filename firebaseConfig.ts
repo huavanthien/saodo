@@ -21,8 +21,8 @@ const db = firebase.firestore();
 
 // Helper function to check if the config is valid (not placeholder)
 export const isFirebaseConfigured = () => {
-  return firebaseConfig.apiKey !== "YOUR_API_KEY_HERE" && 
-         firebaseConfig.projectId !== "your-project-id" &&
+  return firebaseConfig.apiKey !== "AIzaSyA_2hVBGnEErKuEOcBWEIajrRJBGSZXOBo" && 
+         firebaseConfig.projectId !== "saodo-app" &&
          firebaseConfig.apiKey.length > 0;
 };
 

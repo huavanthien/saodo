@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { MAX_DAILY_SCORE } from '../constants';
 import { DailyLog, ClassEntity, CriteriaConfig, User, UserRole } from '../types';
-import { Plus, Trash2, Save, Gift, AlertCircle, Calendar, User as UserIcon, Clock, CheckCircle2, Edit3, RotateCcw } from 'lucide-react';
+import { Trash2, Save, Gift, AlertCircle, Clock, CheckCircle2, Edit3, RotateCcw, User as UserIcon, ArrowRight, Calculator } from 'lucide-react';
 
 interface InputFormProps {
   onSave: (log: DailyLog) => void;
@@ -11,6 +11,12 @@ interface InputFormProps {
   currentUser?: User | null;
   logs?: DailyLog[];
   onDelete?: (id: string) => void;
+}
+
+interface DeductionItem {
+    criteriaId: string;
+    pointsLost: number | ''; // Allow empty string for better typing experience
+    note: string;
 }
 
 export const InputForm: React.FC<InputFormProps> = ({ onSave, classes, criteriaList, currentUser, logs = [], onDelete }) => {
@@ -28,12 +34,12 @@ export const InputForm: React.FC<InputFormProps> = ({ onSave, classes, criteriaL
 
   const [selectedClass, setSelectedClass] = useState<string>('');
   const [date, setDate] = useState<string>(new Date().toISOString().split('T')[0]);
-  const [week, setWeek] = useState<number>(12); // Default week, should ideally be calculated from date
+  const [week, setWeek] = useState<number>(12); 
   const [reporterName, setReporterName] = useState<string>('');
   
   // Form State
-  const [deductions, setDeductions] = useState<{ criteriaId: string; pointsLost: number; note: string }[]>([]);
-  const [bonusPoints, setBonusPoints] = useState<number>(0);
+  const [deductions, setDeductions] = useState<DeductionItem[]>([]);
+  const [bonusPoints, setBonusPoints] = useState<number | ''>(0);
   const [comment, setComment] = useState<string>('');
   const [isBonusOnly, setIsBonusOnly] = useState<boolean>(false);
   
@@ -74,14 +80,14 @@ export const InputForm: React.FC<InputFormProps> = ({ onSave, classes, criteriaL
         setComment(existingLog.comment || '');
         setReporterName(existingLog.reporterName || currentUser?.name || '');
         
-        // Tự động bật chế độ Bonus Only nếu phiếu cũ chỉ có điểm cộng
+        // Tự động bật chế độ Bonus Only nếu phiếu cũ chỉ có điểm cộng và không có lỗi
         if (existingLog.deductions.length === 0 && existingLog.bonusPoints > 0) {
             setIsBonusOnly(true);
         } else {
             setIsBonusOnly(false);
         }
     } else {
-        // Chế độ thêm mới (New Mode)
+        // Chế độ thêm mới (New Mode) - Reset form sạch sẽ
         setIsEditingMode(false);
         setDeductions([]);
         setBonusPoints(0);
@@ -112,27 +118,33 @@ export const InputForm: React.FC<InputFormProps> = ({ onSave, classes, criteriaL
     setDeductions(newDeductions);
   };
 
-  const updateDeduction = (index: number, field: string, value: any) => {
+  const updateDeduction = (index: number, field: keyof DeductionItem, value: any) => {
     const newDeductions = [...deductions];
-    // @ts-ignore
-    newDeductions[index][field] = value;
+    // Create a new object to ensure state immutability
+    newDeductions[index] = {
+        ...newDeductions[index],
+        [field]: value
+    };
     setDeductions(newDeductions);
   };
 
-  const calculateTotal = () => {
-    if (isBonusOnly) {
-      return bonusPoints; // Nếu chế độ chỉ cộng điểm, tổng điểm là điểm cộng (hoặc 100 + bonus tùy quy định, ở đây giả sử là bonus)
-      // Thường thì điểm cộng được cộng vào điểm 100. Sửa lại logic một chút:
-      // return 100 + bonusPoints; // Nếu muốn nền tảng là 100
-    }
+  const calculateStats = () => {
+    const bonus = Number(bonusPoints) || 0;
     
-    // Logic mặc định: 100 - Trừ + Cộng
-    const totalDeducted = deductions.reduce((acc, curr) => {
-        const points = Number(curr.pointsLost);
-        return acc + (isNaN(points) ? 0 : points);
+    // Nếu là chế độ chỉ cộng điểm => Không có trừ điểm
+    const totalDeducted = isBonusOnly ? 0 : deductions.reduce((acc, curr) => {
+        const points = Number(curr.pointsLost) || 0;
+        return acc + points;
     }, 0);
-    return Math.max(0, MAX_DAILY_SCORE - totalDeducted + bonusPoints);
+
+    // Công thức: 100 (Gốc) - Trừ + Cộng
+    // Lưu ý: Điểm không được âm
+    const totalScore = Math.max(0, MAX_DAILY_SCORE - totalDeducted + bonus);
+
+    return { totalScore, totalDeducted, bonus };
   };
+
+  const { totalScore, totalDeducted, bonus } = calculateStats();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -153,8 +165,9 @@ export const InputForm: React.FC<InputFormProps> = ({ onSave, classes, criteriaL
         const logId = `${date}-${selectedClass}`;
 
         const cleanDeductions = isBonusOnly ? [] : deductions.map(d => ({
-            ...d,
-            pointsLost: Number(d.pointsLost) || 0 // Ensure number to prevent NaN error
+            criteriaId: d.criteriaId,
+            pointsLost: Number(d.pointsLost) || 0,
+            note: d.note
         }));
 
         const newLog: DailyLog = {
@@ -164,20 +177,22 @@ export const InputForm: React.FC<InputFormProps> = ({ onSave, classes, criteriaL
           classId: selectedClass,
           deductions: cleanDeductions,
           bonusPoints: Number(bonusPoints) || 0,
-          totalScore: calculateTotal(),
+          totalScore: totalScore,
           reporterName,
           comment
         };
 
         await onSave(newLog);
         
-        // Sau khi lưu thành công, nếu muốn chuyển sang lớp tiếp theo:
+        // Tự động chuyển sang lớp tiếp theo (Auto-advance)
         const currentIndex = availableClasses.findIndex(c => c.id === selectedClass);
         if (currentIndex >= 0 && currentIndex < availableClasses.length - 1) {
-            setSelectedClass(availableClasses[currentIndex + 1].id);
+            // Delay nhẹ để người dùng thấy hiệu ứng loading xong
+            setTimeout(() => {
+                setSelectedClass(availableClasses[currentIndex + 1].id);
+            }, 300);
         } else {
-            // Nếu là lớp cuối cùng, hoặc muốn ở lại, chỉ cần reset state loading
-            // Vì useEffect sẽ chạy lại và load data vừa lưu (chuyển sang chế độ Edit)
+            // Nếu là lớp cuối cùng thì thôi
         }
 
     } catch (error) {
@@ -190,12 +205,14 @@ export const InputForm: React.FC<InputFormProps> = ({ onSave, classes, criteriaL
 
   const handleReset = async () => {
      if (!selectedClass || !date) return;
-     if (!confirm(`Bạn có chắc chắn muốn xóa/làm lại phiếu chấm của lớp ${selectedClass} ngày ${date}?`)) return;
+     if (!confirm(`Bạn có chắc chắn muốn XÓA kết quả chấm của lớp ${selectedClass} ngày ${date}?`)) return;
 
      if (onDelete) {
+         setIsSaving(true);
          // ID is always date-classId
          const logId = `${date}-${selectedClass}`;
          await onDelete(logId);
+         setIsSaving(false);
          // Reset UI handled by useEffect when log disappears from props
      }
   };
@@ -223,7 +240,7 @@ export const InputForm: React.FC<InputFormProps> = ({ onSave, classes, criteriaL
                 {/* Status Indicator Bar */}
                 {isEditingMode && (
                     <div className="absolute top-0 left-0 w-full bg-orange-50 text-orange-700 text-xs font-bold py-1 px-4 text-center border-b border-orange-100 flex items-center justify-center gap-2">
-                        <Edit3 size={12} /> Bạn đang sửa phiếu chấm đã lưu lúc trước
+                        <Edit3 size={12} /> ĐANG SỬA PHIẾU CHẤM CŨ
                     </div>
                 )}
 
@@ -239,8 +256,8 @@ export const InputForm: React.FC<InputFormProps> = ({ onSave, classes, criteriaL
                             type="checkbox" 
                             checked={isBonusOnly} 
                             onChange={(e) => {
-                            setIsBonusOnly(e.target.checked);
-                            if (e.target.checked) setDeductions([]);
+                                setIsBonusOnly(e.target.checked);
+                                if (e.target.checked) setDeductions([]);
                             }}
                             className="w-4 h-4 text-green-600 rounded focus:ring-green-500"
                         />
@@ -311,7 +328,7 @@ export const InputForm: React.FC<InputFormProps> = ({ onSave, classes, criteriaL
                             >
                                 {availableClasses.map(c => (
                                 <option key={c.id} value={c.id}>
-                                    LỚP {c.name} {getGradedStatus(c.id) ? '(Đã chấm)' : ''}
+                                    LỚP {c.name} {getGradedStatus(c.id) ? '✓' : ''}
                                 </option>
                                 ))}
                             </select>
@@ -354,7 +371,7 @@ export const InputForm: React.FC<InputFormProps> = ({ onSave, classes, criteriaL
                                     >
                                         <div className="flex justify-between items-start">
                                             <span className="font-bold text-slate-700 text-sm group-hover:text-red-700 line-clamp-2">{crit.name}</span>
-                                            <span className="bg-red-100 text-red-600 text-xs font-bold px-1.5 py-0.5 rounded ml-2">-{crit.maxPoints}</span>
+                                            <span className="bg-red-100 text-red-600 text-xs font-bold px-1.5 py-0.5 rounded ml-2 shrink-0">-{crit.maxPoints}</span>
                                         </div>
                                     </button>
                                 ))}
@@ -362,225 +379,193 @@ export const InputForm: React.FC<InputFormProps> = ({ onSave, classes, criteriaL
                          </div>
 
                         <div className="border border-red-100 rounded-3xl overflow-hidden mt-4 shadow-sm">
-                            <div className="bg-red-50 p-4 flex justify-between items-center border-b border-red-100">
-                                <label className="text-sm font-bold text-red-800 flex items-center gap-2">
-                                <AlertCircle size={18} /> Chi tiết lỗi vi phạm
-                                </label>
-                                <button 
-                                type="button" 
-                                onClick={() => addDeduction()}
-                                className="text-xs bg-white text-red-600 border border-red-200 px-3 py-1.5 rounded-full hover:bg-red-600 hover:text-white transition font-bold shadow-sm"
-                                >
-                                + Thêm dòng
-                                </button>
+                            <div className="bg-red-50 p-4 border-b border-red-100 flex justify-between items-center">
+                                <h3 className="font-bold text-red-800 flex items-center gap-2">
+                                    <AlertCircle size={20} /> Danh sách vi phạm
+                                </h3>
+                                <span className="text-xs font-bold bg-white text-red-600 px-2 py-1 rounded-lg border border-red-200">
+                                    Tổng trừ: {totalDeducted} điểm
+                                </span>
                             </div>
                             
-                            <div className="p-4 bg-white min-h-[100px]">
-                                {deductions.length === 0 && (
-                                <div className="flex flex-col items-center justify-center h-24 text-slate-300 italic border-2 border-dashed border-slate-100 rounded-xl">
-                                    <CheckCircle2 size={32} className="mb-2 opacity-50" />
-                                    <p>Không có vi phạm nào. Lớp tốt!</p>
-                                </div>
+                            <div className="p-4 space-y-3 bg-white">
+                                {deductions.length === 0 ? (
+                                    <div className="text-center py-8 text-slate-400 italic">
+                                        Lớp chưa có lỗi vi phạm nào.
+                                    </div>
+                                ) : (
+                                    deductions.map((deduction, index) => {
+                                        const criteria = criteriaList.find(c => c.id === deduction.criteriaId);
+                                        return (
+                                            <div key={index} className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100 animate-fade-in">
+                                                <div className="flex-1 w-full">
+                                                    <select 
+                                                        value={deduction.criteriaId}
+                                                        onChange={(e) => updateDeduction(index, 'criteriaId', e.target.value)}
+                                                        className="w-full p-2 rounded-lg border-slate-200 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-primary-500 mb-2 sm:mb-0"
+                                                    >
+                                                        {criteriaList.map(c => (
+                                                            <option key={c.id} value={c.id}>{c.name}</option>
+                                                        ))}
+                                                    </select>
+                                                    <input 
+                                                        type="text" 
+                                                        placeholder="Ghi chú thêm (VD: Tổ 1, 3 em...)" 
+                                                        value={deduction.note}
+                                                        onChange={(e) => updateDeduction(index, 'note', e.target.value)}
+                                                        className="w-full p-2 mt-2 rounded-lg border-slate-200 text-sm focus:ring-2 focus:ring-primary-500"
+                                                    />
+                                                </div>
+                                                <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+                                                    <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm">
+                                                        <span className="text-xs font-bold text-slate-400">Trừ</span>
+                                                        <input 
+                                                            type="number" 
+                                                            min="0" 
+                                                            max="100"
+                                                            value={deduction.pointsLost}
+                                                            onChange={(e) => {
+                                                                const val = e.target.value;
+                                                                updateDeduction(index, 'pointsLost', val === '' ? '' : parseInt(val))
+                                                            }}
+                                                            className="w-12 text-center font-black text-red-600 border-none focus:ring-0 p-0"
+                                                            placeholder="0"
+                                                        />
+                                                    </div>
+                                                    <button 
+                                                        type="button" 
+                                                        onClick={() => removeDeduction(index)}
+                                                        className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+                                                    >
+                                                        <Trash2 size={20} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })
                                 )}
+                            </div>
+                        </div>
+                    </div>
+                    )}
 
-                                <div className="space-y-3">
-                                {deductions.map((deduction, idx) => (
-                                    <div key={idx} className="flex flex-col md:flex-row gap-3 items-start md:items-center p-3 rounded-xl border border-slate-100 hover:border-red-200 transition bg-slate-50/50 animate-fade-in">
-                                    <select 
-                                        className="flex-1 p-2.5 text-sm border-slate-200 rounded-lg focus:ring-2 focus:ring-red-200 font-medium"
-                                        value={deduction.criteriaId}
-                                        onChange={(e) => updateDeduction(idx, 'criteriaId', e.target.value)}
-                                    >
-                                        {criteriaList.map(crit => (
-                                        <option key={crit.id} value={crit.id}>{crit.name} (Max -{crit.maxPoints})</option>
-                                        ))}
-                                    </select>
-                                    <div className="flex items-center gap-3 w-full md:w-auto">
-                                        <input 
-                                            type="text" 
-                                            placeholder="Ghi chú (Tổ 1, bàn cuối...)"
-                                            value={deduction.note}
-                                            onChange={(e) => updateDeduction(idx, 'note', e.target.value)}
-                                            className="flex-1 p-2.5 text-sm border-slate-200 rounded-lg w-full md:w-48"
-                                        />
-                                        <div className="flex items-center bg-red-100 rounded-lg px-2 py-1">
-                                        <span className="text-red-700 font-bold text-xs mr-1">-</span>
-                                        <input 
-                                            type="number" 
-                                            min="1" 
-                                            max="20"
-                                            value={deduction.pointsLost}
-                                            onChange={(e) => {
-                                                const val = parseInt(e.target.value);
-                                                updateDeduction(idx, 'pointsLost', isNaN(val) ? '' : val);
-                                            }}
-                                            onBlur={(e) => {
-                                                 // @ts-ignore
-                                                 if (!e.target.value) updateDeduction(idx, 'pointsLost', 0);
-                                            }}
-                                            className="w-10 bg-transparent text-center font-bold text-red-700 focus:outline-none"
-                                        />
-                                        </div>
-                                        <button 
-                                        type="button" 
-                                        onClick={() => removeDeduction(idx)}
-                                        className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition"
-                                        >
-                                        <Trash2 size={18} />
-                                        </button>
-                                    </div>
-                                    </div>
-                                ))}
+                    {/* BONUS & COMMENT SECTION */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="md:col-span-1">
+                             <label className="block text-sm font-bold text-slate-700 mb-2">Điểm cộng / Khen thưởng</label>
+                             <div className="flex items-center gap-2">
+                                <input 
+                                    type="number" 
+                                    min="0"
+                                    value={bonusPoints}
+                                    onChange={(e) => {
+                                        const val = e.target.value;
+                                        setBonusPoints(val === '' ? '' : parseInt(val));
+                                    }}
+                                    className="w-full p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-500 font-bold text-green-600"
+                                    placeholder="0"
+                                />
+                             </div>
+                             <p className="text-xs text-slate-400 mt-2">Nhập điểm cộng nếu lớp có thành tích tốt.</p>
+                        </div>
+                        <div className="md:col-span-2">
+                             <label className="block text-sm font-bold text-slate-700 mb-2">Nhận xét chung</label>
+                             <textarea 
+                                rows={3}
+                                value={comment}
+                                onChange={(e) => setComment(e.target.value)}
+                                className="w-full p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-500 text-sm"
+                                placeholder="Nhập nhận xét về nề nếp, vệ sinh..."
+                             />
+                        </div>
+                    </div>
+
+                    {/* Footer Actions */}
+                    <div className="sticky bottom-0 bg-white/90 backdrop-blur-md p-4 -mx-6 -mb-8 md:mx-0 md:mb-0 md:rounded-2xl border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4 z-10 shadow-[0_-10px_20px_rgba(0,0,0,0.05)]">
+                        {/* SCORE PREVIEW */}
+                        <div className="flex items-center gap-4 w-full sm:w-auto">
+                            <div className="flex flex-col">
+                                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                                    <Calculator size={10} /> Công thức tính
+                                </span>
+                                <div className="text-sm font-mono text-slate-600 font-medium">
+                                    <span className="text-slate-800 font-bold">100</span>
+                                    <span className="text-red-500 mx-1">- {totalDeducted}</span>
+                                    <span className="text-green-500 mx-1">+ {Number(bonus) || 0}</span>
+                                    <span>=</span>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-xl shadow-lg">
+                                <div className="text-right">
+                                    <span className="block text-[10px] font-bold text-slate-400 uppercase">Tổng điểm</span>
+                                    <span className={`text-2xl font-black leading-none ${totalScore >= 100 ? 'text-green-400' : totalScore < 90 ? 'text-red-400' : 'text-white'}`}>
+                                        {totalScore}
+                                    </span>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    )}
 
-                    {/* BONUS SECTION */}
-                    {currentUser?.role === UserRole.ADMIN && (
-                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-3xl border border-green-100 shadow-sm">
-                        <div className="flex flex-col md:flex-row md:items-center gap-4">
-                            <div className="flex items-center gap-3">
-                            <div className="bg-green-100 p-2 rounded-xl text-green-600">
-                                <Gift size={24} />
-                            </div>
-                            <div>
-                                <h4 className="font-bold text-green-800">Điểm cộng</h4>
-                                <p className="text-xs text-green-600">Dành cho tập thể xuất sắc</p>
-                            </div>
-                            </div>
-                            <div className="flex-1 flex items-center gap-4">
-                            <input 
-                                type="number" 
-                                min="0"
-                                value={bonusPoints}
-                                onChange={(e) => setBonusPoints(parseInt(e.target.value) || 0)}
-                                className="w-24 p-3 text-center font-black text-2xl text-green-600 border-2 border-green-200 rounded-xl focus:ring-4 focus:ring-green-100 bg-white"
-                                placeholder="0"
-                            />
-                            <span className="text-sm text-green-700 italic font-medium">điểm thưởng</span>
-                            </div>
+                        <div className="flex gap-3 w-full sm:w-auto">
+                            {isEditingMode && (
+                                <button 
+                                    type="button" 
+                                    onClick={handleReset}
+                                    disabled={isSaving}
+                                    className="flex-1 sm:flex-none px-6 py-3 rounded-xl border-2 border-red-100 text-red-600 font-bold hover:bg-red-50 transition flex items-center justify-center gap-2"
+                                >
+                                    <RotateCcw size={20} /> 
+                                    <span className="hidden sm:inline">Hủy / Làm lại</span>
+                                </button>
+                            )}
+
+                            <button 
+                                type="submit" 
+                                disabled={isSaving}
+                                className="flex-1 sm:flex-none px-8 py-3 rounded-xl bg-primary-600 text-white font-bold hover:bg-primary-700 shadow-lg shadow-primary-500/30 transition transform active:scale-95 flex items-center justify-center gap-2 disabled:opacity-70 disabled:scale-100"
+                            >
+                                {isSaving ? <span className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></span> : <Save size={20} />}
+                                {isEditingMode ? 'Cập Nhật Điểm' : 'Lưu Kết Quả'}
+                            </button>
                         </div>
                     </div>
-                    )}
-
-                    {/* COMMENTS & TOTAL */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
-                    <div className="md:col-span-2">
-                        <label className="block text-sm font-bold text-slate-700 mb-2">Nhận xét</label>
-                        <textarea 
-                            className="w-full p-4 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-primary-100 transition resize-none bg-slate-50 focus:bg-white"
-                            rows={2}
-                            placeholder="Nhận xét ngắn gọn về tình hình lớp..."
-                            value={comment}
-                            onChange={(e) => setComment(e.target.value)}
-                        ></textarea>
-                    </div>
-                    
-                    <div className="bg-slate-900 p-6 rounded-3xl text-white text-center shadow-xl shadow-slate-200">
-                        <p className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Tổng kết điểm</p>
-                        <p className={`text-5xl font-black ${calculateTotal() >= 100 ? 'text-yellow-400' : 'text-white'}`}>
-                            {calculateTotal()}
-                        </p>
-                        <p className="text-xs text-slate-400 mt-2">Trên thang điểm 100</p>
-                    </div>
-                    </div>
-
-                    <div className="flex gap-4">
-                        {isEditingMode && (
-                             <button
-                                type="button"
-                                onClick={handleReset}
-                                className="px-6 py-5 rounded-2xl font-bold text-red-600 bg-white border-2 border-red-100 hover:bg-red-50 hover:border-red-200 transition shadow-sm flex flex-col items-center justify-center gap-1 min-w-[120px]"
-                             >
-                                 <RotateCcw size={20} />
-                                 <span className="text-xs">Hủy / Làm lại</span>
-                             </button>
-                        )}
-                        <button 
-                        type="submit" 
-                        disabled={isSaving}
-                        className={`flex-1 font-bold text-lg py-5 rounded-2xl shadow-xl flex justify-center items-center gap-3 transition transform hover:scale-[1.01] active:scale-95
-                            ${isEditingMode 
-                                ? 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white shadow-orange-500/30' 
-                                : 'bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 text-white shadow-primary-500/30'}
-                            disabled:opacity-70 disabled:cursor-not-allowed
-                        `}
-                        >
-                        {isSaving ? (
-                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
-                        ) : (
-                            isEditingMode ? <><Save size={24} /> Cập Nhật Kết Quả</> : <><Save size={24} /> Lưu Kết Quả Mới</>
-                        )}
-                        </button>
-                    </div>
-                    
-                    {isEditingMode && (
-                        <p className="text-center text-xs text-orange-600 font-bold">
-                            * Bạn đang cập nhật lại phiếu chấm của ngày {date}
-                        </p>
-                    )}
                 </form>
             </div>
         </div>
 
-        {/* Sidebar History */}
-        <div className="lg:col-span-1">
-             <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 sticky top-24">
-                 <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                     <Clock size={20} className="text-blue-500" />
-                     Tiến độ hôm nay
-                 </h3>
-                 
-                 <div className="mt-2 mb-6">
-                     <div className="flex justify-between text-sm mb-2">
-                         <span className="text-slate-500">Đã chấm:</span>
-                         <span className="font-bold text-slate-800">{logs.filter(l => l.date === date).length}/{availableClasses.length} lớp</span>
-                     </div>
-                     <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
-                         <div 
-                             className="bg-gradient-to-r from-primary-400 to-primary-600 h-full rounded-full transition-all duration-1000 ease-out"
-                             style={{ width: `${availableClasses.length > 0 ? (logs.filter(l => l.date === date).length / availableClasses.length) * 100 : 0}%` }}
-                         ></div>
-                     </div>
-                 </div>
+        {/* Right Sidebar: Guidelines */}
+        <div className="lg:col-span-1 space-y-6">
+            <div className="bg-gradient-to-br from-slate-800 to-slate-900 text-white p-6 rounded-3xl shadow-xl sticky top-24">
+                <div className="flex items-center gap-3 mb-6">
+                   <div className="p-2 bg-white/10 rounded-lg">
+                      <Clock className="text-yellow-400" size={24} />
+                   </div>
+                   <div>
+                      <h3 className="font-bold text-lg leading-tight">Hướng dẫn chấm</h3>
+                      <p className="text-xs text-slate-400">Quy định năm học 2025-2026</p>
+                   </div>
+                </div>
 
-                 <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-                     {logs.filter(l => l.date === date).sort((a, b) => b.totalScore - a.totalScore).map(log => {
-                         const clsName = classes.find(c => c.id === log.classId)?.name || log.classId;
-                         const isCurrent = log.classId === selectedClass;
-                         return (
-                             <div 
-                                key={log.id} 
-                                onClick={() => setSelectedClass(log.classId)}
-                                className={`p-4 rounded-xl border cursor-pointer transition group
-                                    ${isCurrent ? 'bg-orange-50 border-orange-200 shadow-sm' : 'bg-slate-50 border-slate-100 hover:border-blue-200'}
-                                `}
-                             >
-                                 <div className="flex justify-between items-center mb-2">
-                                     <span className={`font-black text-lg ${isCurrent ? 'text-orange-800' : 'text-slate-700'}`}>Lớp {clsName}</span>
-                                     <span className={`font-bold ${log.totalScore >= 100 ? 'text-green-600' : 'text-slate-600'}`}>
-                                         {log.totalScore}đ
-                                     </span>
-                                 </div>
-                                 {log.deductions.length > 0 ? (
-                                     <p className="text-xs text-red-500 line-clamp-1">
-                                         {log.deductions.length} lỗi: {log.deductions.map(d => d.note).join(', ')}
-                                     </p>
-                                 ) : (
-                                     <p className="text-xs text-green-600 font-medium flex items-center gap-1">
-                                         <CheckCircle2 size={10} /> Tốt
-                                     </p>
-                                 )}
-                             </div>
-                         );
-                     })}
-                     {logs.filter(l => l.date === date).length === 0 && (
-                         <div className="text-center py-8 text-slate-400 text-sm italic">Chưa có lớp nào được chấm hôm nay.</div>
-                     )}
-                 </div>
-             </div>
+                <div className="space-y-4 text-sm">
+                   <div className="bg-white/5 p-3 rounded-xl border border-white/10">
+                      <span className="font-bold text-green-400 block mb-1">✓ Điểm chuẩn: 100 điểm</span>
+                      <p className="text-slate-300 text-xs">Mỗi lớp bắt đầu ngày mới với 100 điểm. Điểm trừ sẽ được khấu trừ từ quỹ điểm này.</p>
+                   </div>
+                   
+                   <div className="bg-white/5 p-3 rounded-xl border border-white/10">
+                      <span className="font-bold text-orange-400 block mb-1">⚠ Điểm cộng</span>
+                      <p className="text-slate-300 text-xs">Điểm cộng được tính thêm vào tổng điểm sau khi đã trừ lỗi. Tổng điểm có thể vượt quá 100.</p>
+                   </div>
+
+                   <div className="bg-white/5 p-3 rounded-xl border border-white/10">
+                      <span className="font-bold text-blue-400 block mb-1">★ Xếp loại</span>
+                      <ul className="text-xs text-slate-300 space-y-1 mt-1 pl-4 list-disc">
+                         <li><span className="text-white font-bold">Xuất sắc:</span> ≥ 100 điểm</li>
+                         <li><span className="text-white font-bold">Tốt:</span> 95 - 99 điểm</li>
+                         <li><span className="text-white font-bold">Khá:</span> 85 - 94 điểm</li>
+                      </ul>
+                   </div>
+                </div>
+            </div>
         </div>
     </div>
   );
