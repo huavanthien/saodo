@@ -15,3 +15,12 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
+// Hàm kiểm tra xem người dùng đã điền config chưa
+export const isFirebaseConfigured = () => {
+  return firebaseConfig.apiKey !== "YOUR_API_KEY" && firebaseConfig.apiKey !== "";
+};
+
+// Khởi tạo Firebase (Singleton pattern để tránh lỗi duplicate app)
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+export const db = getFirestore(app);
+export const auth = getAuth(app);
