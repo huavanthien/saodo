@@ -156,16 +156,16 @@ export const MOCK_ANNOUNCEMENTS: Announcement[] = [
 
 export const MOCK_USERS: User[] = [
   {
-    username: 'admin',
-    password: '123456',
+    username: 'admin@nguyenhue.edu.vn',
+    password: '123123',
     name: 'Tổng Phụ Trách',
     role: UserRole.ADMIN,
     assignedClassIds: []
   },
   {
-    username: 'saodo1',
-    password: '123456',
-    name: 'Nguyễn Văn A',
+    username: 'saodo1@nguyenhue.edu.vn',
+    password: '123123',
+    name: 'Nguyễn Anh Thư',
     role: UserRole.RED_STAR,
     assignedClassIds: ['5A1', '5A2', '5A3', '4A1'] 
   },
