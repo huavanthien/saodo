@@ -1,26 +1,21 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 
 // Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "AIzaSyA_2hVBGnEErKuEOcBWEIajrRJBGSZXOBo",
-  authDomain: "saodo-app.firebaseapp.com",
-  projectId: "saodo-app",
-  storageBucket: "saodo-app.firebasestorage.app",
-  messagingSenderId: "51876429552",
-  appId: "1:51876429552:web:20b80cf0fc0b1e79c04c35"
+  apiKey: "AIzaSyAyWs0H0n3f20RCcV_B32yN-c1yFxemHSA",
+  authDomain: "gen-lang-client-0580790563.firebaseapp.com",
+  projectId: "gen-lang-client-0580790563",
+  storageBucket: "gen-lang-client-0580790563.firebasestorage.app",
+  messagingSenderId: "687877182374",
+  appId: "1:687877182374:web:f564eb25ae6322b416f567",
+  measurementId: "G-ZHGP2P4QM2"
 };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-// Hàm kiểm tra xem người dùng đã điền config chưa
-export const isFirebaseConfigured = () => {
-  return firebaseConfig.apiKey !== "YOUR_API_KEY" && firebaseConfig.apiKey !== "";
-};
-
-// Khởi tạo Firebase (Singleton pattern để tránh lỗi duplicate app)
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-export const db = getFirestore(app);
-export const auth = getAuth(app);
+const analytics = getAnalytics(app);
