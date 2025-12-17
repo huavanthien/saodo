@@ -187,25 +187,25 @@ export const MOCK_USERS: User[] = [
 export const SLIDER_IMAGES: SliderImage[] = [
   {
     id: 'img1',
-    url: 'https://images.unsplash.com/photo-1546410531-bb4caa6b424d?q=80&w=800&auto=format&fit=crop',
+    url: 'https://sv2.anhsieuviet.com/2025/12/03/4d40e1104cbfc0e199ae.jpg',
     title: 'Lễ Khai Giảng Năm Học Mới',
     subtitle: 'Hân hoan chào đón năm học 2025 - 2026'
   },
   {
     id: 'img2',
-    url: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?q=80&w=800&auto=format&fit=crop',
+    url: 'https://sv2.anhsieuviet.com/2025/12/03/1850554466985972304.jpg',
     title: 'Hoạt động ngoại khóa Hè',
     subtitle: 'Các trò chơi tập thể vui nhộn'
   },
   {
     id: 'img3',
-    url: 'https://images.unsplash.com/photo-1427504746696-ea3093607dbe?q=80&w=800&auto=format&fit=crop',
+    url: 'https://sv2.anhsieuviet.com/2025/12/03/403525155803225531.jpg',
     title: 'Thi Đua Dạy Tốt - Học Tốt',
     subtitle: 'Phong trào thi đua chào mừng 20/11'
   },
   {
     id: 'img4',
-    url: 'https://images.unsplash.com/photo-1588072432836-e10032774350?q=80&w=800&auto=format&fit=crop',
+    url: 'https://sv2.anhsieuviet.com/2025/12/03/56cba3a9-e0a8-4477-8627-cbed9453ab3d.jpg',
     title: 'Thư Viện Xanh',
     subtitle: 'Không gian đọc sách thân thiện cho học sinh'
   }
